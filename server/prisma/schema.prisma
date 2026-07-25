@@ -1,0 +1,332 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("super_admin")
+  permissions  String   @default("all")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  action      String
+  user        String   @default("Super Admin")
+  target      String   @default("System")
+  details     String?
+  timestamp   DateTime @default(now())
+}
+
+model Product {
+  id                String  @id @default(uuid())
+  name              String
+  sku               String  @unique
+  description       String
+  price             Float
+  salePrice         Float?
+  stock             Int     @default(0)
+  unit              String  @default("piece")
+  status            String  @default("active") // active, draft, out_of_stock
+  tags              String? // comma-separated
+  categoryId        String?
+  brandId           String?
+  isHero            Boolean @default(false)
+  heroOrder         Int     @default(0)
+  badge             String?
+  isFeatured        Boolean @default(false)
+  featuredOrder     Int     @default(0)
+  isTrending        Boolean @default(false)
+  trendingOrder     Int     @default(0)
+  lowStockThreshold Int     @default(10)
+
+  category         Category?             @relation(fields: [categoryId], references: [id])
+  brand            Brand?                @relation(fields: [brandId], references: [id])
+  images           ProductImage[]
+  orderItems       OrderItem[]
+  reviews          Review[]
+  inventoryHistory InventoryAdjustment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductImage {
+  id        String  @id @default(uuid())
+  productId String
+  url       String
+  isPrimary Boolean @default(false)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id           String  @id @default(uuid())
+  name         String
+  slug         String  @unique
+  description  String?
+  image        String?
+  parentId     String?
+  displayOrder Int     @default(0)
+  active       Boolean @default(true)
+
+  parent   Category?  @relation("Subcategories", fields: [parentId], references: [id])
+  children Category[] @relation("Subcategories")
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Brand {
+  id           String  @id @default(uuid())
+  name         String
+  logo         String?
+  link         String?
+  displayOrder Int     @default(0)
+  active       Boolean @default(true)
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model InventoryAdjustment {
+  id              String   @id @default(uuid())
+  productId       String
+  quantityChanged Int
+  reason          String
+  date            DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id       String   @id @default(uuid())
+  name     String
+  email    String   @unique
+  phone    String?
+  joinDate DateTime @default(now())
+  isActive Boolean  @default(true)
+
+  orders    Order[]
+  addresses CustomerAddress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CustomerAddress {
+  id         String  @id @default(uuid())
+  customerId String
+  street     String
+  city       String
+  zip        String
+  isDefault  Boolean @default(false)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id            String   @id @default(uuid())
+  orderNumber   String   @unique
+  customerId    String?
+  total         Float
+  paymentStatus String   @default("pending") // pending, paid, refunded
+  orderStatus   String   @default("pending") // pending, processing, shipped, delivered, cancelled
+  date          DateTime @default(now())
+
+  customer Customer?   @relation(fields: [customerId], references: [id])
+  items    OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id        String @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Coupon {
+  id            String    @id @default(uuid())
+  code          String    @unique
+  discountType  String // percentage, fixed
+  discountValue Float
+  minOrderValue Float     @default(0)
+  usageLimit    Int?
+  usageCount    Int       @default(0)
+  validFrom     DateTime?
+  validTo       DateTime?
+  active        Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Banner {
+  id           String    @id @default(uuid())
+  title        String
+  subtext      String?
+  buttonText   String?
+  image        String
+  link         String?
+  mediaType    String    @default("IMAGE") // IMAGE, VIDEO
+  displayOrder Int       @default(0)
+  active       Boolean   @default(true)
+  startDate    DateTime?
+  endDate      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogPost {
+  id            String    @id @default(uuid())
+  title         String
+  slug          String    @unique
+  featuredImage String?
+  content       String
+  author        String?
+  category      String?   @default("General")
+  tags          String?
+  views         Int       @default(0)
+  status        String    @default("draft") // draft, published
+  publishDate   DateTime?
+  seoTitle      String?
+  seoDesc       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StaticPage {
+  id       String  @id @default(uuid())
+  title    String
+  slug     String  @unique
+  content  String
+  seoTitle String?
+  seoDesc  String?
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id           String   @id @default(uuid())
+  productId    String
+  customerName String
+  rating       Int      @default(5)
+  text         String
+  status       String   @default("pending") // pending, approved, rejected
+  reply        String?
+  date         DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MediaFile {
+  id           String   @id @default(uuid())
+  filename     String
+  url          String
+  mimeType     String
+  size         Int
+  folder       String   @default("general")
+  dateUploaded DateTime @default(now())
+}
+
+model NavigationLink {
+  id           String  @id @default(uuid())
+  label        String
+  url          String
+  displayOrder Int     @default(0)
+  active       Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Setting {
+  key   String @id
+  value String // JSON stringified value
+}
+
+model DeliveryZone {
+  id         String  @id @default(uuid())
+  name       String
+  fee        Float   @default(0)
+  freeAbove  Float?
+  active     Boolean @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model PaymentGateway {
+  id          String  @id @default(uuid())
+  name        String
+  code        String  @unique
+  enabled     Boolean @default(false)
+  isTestMode  Boolean @default(true)
+  testKey     String?
+  liveKey     String?
+  testSecret  String?
+  liveSecret  String?
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+
+model EmailTemplate {
+  id        String @id @default(uuid())
+  name      String
+  code      String @unique
+  subject   String
+  body      String
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model MigrationJob {
+  id        String   @id @default(uuid())
+  source    String
+  status    String   // running, completed, failed
+  total     Int      @default(0)
+  created   Int      @default(0)
+  updated   Int      @default(0)
+  failed    Int      @default(0)
+  errorLog  String?
+  date      DateTime @default(now())
+}
+
+model BackupFile {
+  id        String   @id @default(uuid())
+  filename  String
+  size      Int      @default(0)
+  type      String   @default("full")
+  createdAt DateTime @default(now())
+}
+
+model WebPConversionLog {
+  id            String   @id @default(uuid())
+  filename      String
+  originalSize  Int
+  newSize       Int
+  status        String   @default("success")
+  createdAt     DateTime @default(now())
+}

@@ -1,0 +1,220 @@
+/* === HomePage === */
+.home-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding-bottom: var(--space-12);
+}
+
+.hero {
+  position: relative;
+  background: linear-gradient(135deg, var(--color-primary-900) 0%, var(--color-primary-700) 100%);
+  color: white;
+  padding: var(--space-16) var(--space-4);
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Decorative background elements */
+.hero::before,
+.hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+}
+
+.hero::before {
+  width: 600px;
+  height: 600px;
+  top: -200px;
+  left: -200px;
+}
+
+.hero::after {
+  width: 800px;
+  height: 800px;
+  bottom: -400px;
+  right: -200px;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 10;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: var(--space-4);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.hero-subtitle {
+  font-size: var(--font-size-lg);
+  opacity: 0.9;
+  margin-bottom: var(--space-8);
+  max-width: 600px;
+}
+
+.hero-search {
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: var(--space-8);
+}
+
+.hero-search-wrapper {
+  display: flex;
+  background: white;
+  padding: var(--space-2);
+  border-radius: var(--radius-full);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+.hero-search-wrapper .search-icon {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xl);
+}
+
+.hero-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  padding: var(--space-2);
+  outline: none;
+}
+
+.hero-search-btn {
+  border-radius: var(--radius-full);
+  padding: var(--space-3) var(--space-6);
+}
+
+.hero-features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-6);
+  font-weight: 500;
+  font-size: var(--font-size-sm);
+}
+
+.hero-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: rgba(255, 255, 255, 0.1);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.section {
+  padding: var(--space-8) 0;
+}
+
+.section.bg-light {
+  background-color: var(--color-bg-alt);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: var(--space-8);
+}
+
+.section-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.info-section {
+  padding-bottom: var(--space-16);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 768px) {
+  .info-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.info-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.info-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.info-card h3 {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.info-card p {
+  color: var(--color-text-muted);
+  line-height: var(--leading-relaxed);
+}
+
+.info-card-primary {
+  background: linear-gradient(135deg, var(--color-primary-50) 0%, white 100%);
+  border-color: var(--color-primary-200);
+}
+
+.contact-whatsapp, .contact-phone {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.contact-whatsapp a, .contact-phone a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.contact-whatsapp a:hover, .contact-phone a:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.whatsapp-icon, .phone-icon {
+  font-size: 24px;
+}
