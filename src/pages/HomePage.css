@@ -657,3 +657,147 @@
 .mb-2 { margin-bottom: var(--space-2); }
 .mt-3 { margin-top: var(--space-3); }
 .text-center { text-align: center; }
+
+/* ==========================================================================
+   CONTACT / STORE INFO SECTION STYLING (MOBILE OPTIMIZED)
+   ========================================================================== */
+.info-section {
+  padding-top: var(--space-10);
+  padding-bottom: var(--space-16);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.info-grid-modern {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .info-grid-modern {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+  }
+}
+
+.info-card-modern {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .info-card-modern {
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+  }
+}
+
+.info-icon-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-50);
+  color: var(--color-primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.highlight-badge {
+  background: var(--color-accent-50);
+  color: var(--color-accent-dark);
+}
+
+.info-card-modern h3 {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: var(--space-1);
+}
+
+.info-address {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.info-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.contact-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  width: 100%;
+}
+
+.contact-link-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.contact-icon-bubble {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.whatsapp-bubble {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.phone-bubble {
+  background: #E0F2FE;
+  color: #0369A1;
+}
+
+.contact-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  display: block;
+}
+
+.contact-link-item a {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+  word-break: break-all;
+}

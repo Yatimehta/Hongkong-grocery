@@ -2,6 +2,7 @@
   display: flex;
   gap: var(--space-3);
   align-items: center;
+  width: 100%;
 }
 
 .add-to-cart-widget.compact {
@@ -28,7 +29,7 @@
 
 .compact .qty-selector {
   height: 36px;
-  flex: 0 0 88px;
+  flex: 0 0 84px;
 }
 
 .qty-btn {
@@ -55,7 +56,7 @@
 }
 
 .compact .qty-btn {
-  width: 26px;
+  width: 24px;
 }
 
 .qty-display {
@@ -64,7 +65,7 @@
   font-weight: 600;
   font-size: var(--font-size-sm);
   color: var(--color-text);
-  min-width: 24px;
+  min-width: 20px;
 }
 
 .btn-add {
@@ -76,11 +77,12 @@
   gap: 0.35rem;
   font-weight: 600;
   border-radius: var(--radius-md);
+  white-space: nowrap;
 }
 
 .compact .btn-add {
   height: 36px;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-2);
   font-size: var(--font-size-xs);
 }
 
@@ -91,20 +93,32 @@
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
 }
 
-@media (max-width: 480px) {
+/* Mobile Responsiveness for 2-Column Product Cards */
+@media (max-width: 640px) {
+  .add-to-cart-widget.compact {
+    flex-direction: column;
+    width: 100%;
+    gap: 6px;
+  }
+
   .compact .qty-selector {
     height: 32px;
-    flex: 0 0 74px;
+    width: 100%;
+    flex: none;
+    justify-content: space-between;
   }
 
   .compact .qty-btn {
-    width: 22px;
+    width: 32px;
   }
 
   .compact .btn-add {
-    height: 32px;
+    height: 34px;
+    width: 100%;
     padding: 0 6px;
     font-size: 11px;
+    font-weight: 700;
+    justify-content: center;
     letter-spacing: -0.01em;
   }
 }
