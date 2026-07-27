@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
+import { useStore } from './hooks/useStore';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -35,6 +36,15 @@ function StaticPage({ title, children }) {
 }
 
 function StorefrontApp() {
+  const { settings } = useStore();
+
+  const storeAddress = settings?.store_address || 'G/F, 65-67 South Wall Road, Kowloon City, Hong Kong';
+  const supportPhone = settings?.support_phone || '+852 2383 2860';
+  const rawWhatsApp = settings?.whatsapp_number || '85263595566';
+  const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
+  const displayWhatsApp = rawWhatsApp === '85263595566' ? '+852 6359 5566' : rawWhatsApp;
+  const contactEmail = settings?.contact_email || 'info@waqas.com.hk';
+
   return (
     <div className="app-container">
       <ScrollToTop />
@@ -78,10 +88,10 @@ function StorefrontApp() {
           
           <Route path="/contact" element={
             <StaticPage title="Contact Us">
-              <p><strong>Address:</strong> G/F, 65-67 South Wall Road, Kowloon City, Hong Kong</p>
-              <p><strong>Phone:</strong> <a href="tel:+85223832860">+852 2383 2860</a></p>
-              <p><strong>WhatsApp:</strong> <a href="https://wa.me/85263595566">+852 6359 5566</a></p>
-              <p><strong>Email:</strong> <a href="mailto:info@waqas.com.hk">info@waqas.com.hk</a></p>
+              <p><strong>Address:</strong> {storeAddress}</p>
+              <p><strong>Phone:</strong> <a href={`tel:${supportPhone.replace(/\s+/g, '')}`}>{supportPhone}</a></p>
+              <p><strong>WhatsApp:</strong> <a href={`https://wa.me/${cleanWhatsApp}`} target="_blank" rel="noopener noreferrer">{displayWhatsApp}</a></p>
+              <p><strong>Email:</strong> <a href={`mailto:${contactEmail}`}>{contactEmail}</a></p>
             </StaticPage>
           } />
           

@@ -1,10 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useStore } from '../hooks/useStore';
+import { MapPin, Phone, MessageCircle, Mail } from 'lucide-react';
 import './Footer.css';
 import HoursTable from './HoursTable';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { settings } = useStore();
+
+  const storeName = settings?.store_name || 'Waqas Provision Store';
+  const storeAddress = settings?.store_address || 'G/F, 65-67 South Wall Road, Kowloon City';
+  const supportPhone = settings?.support_phone || '+852 2383 2860';
+  const rawWhatsApp = settings?.whatsapp_number || '85263595566';
+  const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
+  const contactEmail = settings?.contact_email || 'info@waqas.com.hk';
+
+  const displayWhatsApp = rawWhatsApp === '85263595566' ? '+852 6359 5566' : rawWhatsApp;
 
   return (
     <footer className="footer">
@@ -12,15 +24,29 @@ export default function Footer() {
         <div className="footer-grid">
           {/* Store Info */}
           <div className="footer-section">
-            <h3 className="footer-title">Waqas Provision Store</h3>
+            <h3 className="footer-title">{storeName}</h3>
             <p className="footer-desc">
               Your trusted source for authentic Indian and Pakistani groceries in Hong Kong.
             </p>
             <div className="footer-contact">
-              <p>📍 G/F, 65-67 South Wall Road, Kowloon City</p>
-              <p>📞 <a href="tel:+85223832860">+852 2383 2860</a></p>
-              <p>📱 <a href="https://wa.me/85263595566">WhatsApp: +852 6359 5566</a></p>
-              <p>📧 <a href="mailto:info@waqas.com.hk">info@waqas.com.hk</a></p>
+              <p className="footer-contact-item">
+                <MapPin size={18} className="footer-icon" />
+                <span>{storeAddress}</span>
+              </p>
+              <p className="footer-contact-item">
+                <Phone size={18} className="footer-icon" />
+                <a href={`tel:${supportPhone.replace(/\s+/g, '')}`}>{supportPhone}</a>
+              </p>
+              <p className="footer-contact-item">
+                <MessageCircle size={18} className="footer-icon" />
+                <a href={`https://wa.me/${cleanWhatsApp}`} target="_blank" rel="noopener noreferrer">
+                  WhatsApp: {displayWhatsApp}
+                </a>
+              </p>
+              <p className="footer-contact-item">
+                <Mail size={18} className="footer-icon" />
+                <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+              </p>
             </div>
           </div>
 
@@ -48,8 +74,8 @@ export default function Footer() {
         <div className="footer-bottom">
           <p>&copy; {currentYear} Waqas Provision Store. All rights reserved.</p>
           <div className="footer-bottom-links">
-            <Link to="/privacy">Privacy Policy</Link>
-            <Link to="/terms">Terms of Service</Link>
+            <Link to="/delivery">Delivery Terms</Link>
+            <Link to="/faq">Help Center</Link>
           </div>
         </div>
       </div>

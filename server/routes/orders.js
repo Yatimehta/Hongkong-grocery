@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const prisma = require('../prismaClient');
+const { db } = require('../firebaseClient');
 const PDFDocument = require('pdfkit');
 
 // GET all orders
@@ -8,41 +8,55 @@ router.get('/', async (req, res) => {
   try {
     const { search, status, page = 1, limit = 20 } = req.query;
     
-    const where = {};
-    if (search) {
-      where.OR = [
-        { orderNumber: { contains: search } },
-        { customer: { name: { contains: search } } }
-      ];
+    let ordersList = [];
+    try {
+      const snapshot = await db.collection('orders').get();
+      snapshot.forEach(doc => {
+        ordersList.push({ id: doc.id, ...doc.data() });
+      });
+    } catch (e) {
+      console.log('Orders Firestore read failed, using empty array');
     }
-    if (status) where.orderStatus = status;
 
-    const skip = (Number(page) - 1) * Number(limit);
+    if (search) {
+      const q = search.toLowerCase();
+      ordersList = ordersList.filter(o => 
+        (o.orderNumber && o.orderNumber.toLowerCase().includes(q)) ||
+        (o.customer && o.customer.name && o.customer.name.toLowerCase().includes(q))
+      );
+    }
+    if (status) {
+      ordersList = ordersList.filter(o => o.orderStatus === status);
+    }
 
-    const [orders, total] = await Promise.all([
-      prisma.order.findMany({
-        where,
-        include: { 
-          customer: { select: { name: true, email: true } },
-          _count: { select: { items: true } }
-        },
-        skip,
-        take: Number(limit),
-        orderBy: { createdAt: 'desc' }
-      }),
-      prisma.order.count({ where })
-    ]);
+    // Sort by createdAt desc
+    ordersList.sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+
+    const total = ordersList.length;
+    const limitNum = Number(limit);
+    const skip = (Number(page) - 1) * limitNum;
+    const paginatedOrders = ordersList.slice(skip, skip + limitNum);
+
+    const data = paginatedOrders.map(o => ({
+      ...o,
+      _count: { items: o.items ? o.items.length : 0 }
+    }));
 
     res.json({
-      data: orders,
+      data,
       pagination: {
         total,
         page: Number(page),
-        limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit))
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum)
       }
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 });
@@ -50,18 +64,19 @@ router.get('/', async (req, res) => {
 // GET single order
 router.get('/:id', async (req, res) => {
   try {
-    const order = await prisma.order.findUnique({
-      where: { id: req.params.id },
-      include: {
-        customer: true,
-        items: {
-          include: {
-            product: { select: { name: true, sku: true } }
-          }
-        }
-      }
-    });
-    if (!order) return res.status(404).json({ error: 'Order not found' });
+    const doc = await db.collection('orders').doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: 'Order not found' });
+    
+    const order = { id: doc.id, ...doc.data() };
+    
+    // Resolve products for items if missing to match include logic
+    if (order.items) {
+      order.items = order.items.map(item => ({
+        ...item,
+        product: { name: item.productName || 'Product', sku: '' }
+      }));
+    }
+    
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch order' });
@@ -73,15 +88,19 @@ router.put('/:id', async (req, res) => {
   try {
     const { orderStatus, paymentStatus } = req.body;
     
-    const data = {};
-    if (orderStatus) data.orderStatus = orderStatus;
-    if (paymentStatus) data.paymentStatus = paymentStatus;
+    const docRef = db.collection('orders').doc(req.params.id);
+    const doc = await docRef.get();
+    if (!doc.exists) return res.status(404).json({ error: 'Order not found' });
 
-    const order = await prisma.order.update({
-      where: { id: req.params.id },
-      data
-    });
-    res.json(order);
+    const updatedData = {
+      updatedAt: new Date().toISOString()
+    };
+    if (orderStatus) updatedData.orderStatus = orderStatus;
+    if (paymentStatus) updatedData.paymentStatus = paymentStatus;
+
+    await docRef.update(updatedData);
+    const updatedDoc = await docRef.get();
+    res.json({ id: updatedDoc.id, ...updatedDoc.data() });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update order' });
   }
@@ -90,49 +109,46 @@ router.put('/:id', async (req, res) => {
 // GET order invoice PDF
 router.get('/:id/invoice', async (req, res) => {
   try {
-    const order = await prisma.order.findUnique({
-      where: { id: req.params.id },
-      include: {
-        customer: true,
-        items: { include: { product: true } }
-      }
-    });
-    if (!order) return res.status(404).json({ error: 'Order not found' });
+    const doc = await db.collection('orders').doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: 'Order not found' });
+    const order = doc.data();
 
-    const doc = new PDFDocument();
+    const pdfDoc = new PDFDocument();
     let filename = `Invoice_${order.orderNumber}.pdf`;
     
     res.setHeader('Content-disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-type', 'application/pdf');
     
-    doc.pipe(res);
+    pdfDoc.pipe(res);
     
     // Header
-    doc.fontSize(20).text('INVOICE', { align: 'center' });
-    doc.moveDown();
+    pdfDoc.fontSize(20).text('INVOICE', { align: 'center' });
+    pdfDoc.moveDown();
     
     // Order info
-    doc.fontSize(12).text(`Order Number: ${order.orderNumber}`);
-    doc.text(`Date: ${new Date(order.date).toLocaleDateString()}`);
-    doc.text(`Status: ${order.orderStatus.toUpperCase()}`);
-    doc.moveDown();
+    pdfDoc.fontSize(12).text(`Order Number: ${order.orderNumber}`);
+    pdfDoc.text(`Date: ${new Date(order.date).toLocaleDateString()}`);
+    pdfDoc.text(`Status: ${(order.orderStatus || 'pending').toUpperCase()}`);
+    pdfDoc.moveDown();
     
     // Customer info
-    doc.text(`Customer: ${order.customer?.name || 'Guest'}`);
-    if (order.customer?.email) doc.text(`Email: ${order.customer.email}`);
-    doc.moveDown();
+    pdfDoc.text(`Customer: ${order.customer?.name || 'Guest'}`);
+    if (order.customer?.email) pdfDoc.text(`Email: ${order.customer.email}`);
+    pdfDoc.moveDown();
     
     // Items
-    doc.text('Items:', { underline: true });
-    doc.moveDown(0.5);
-    order.items.forEach(item => {
-      doc.text(`${item.product.name} (x${item.quantity}) - $${item.price.toFixed(2)}`);
-    });
+    pdfDoc.text('Items:', { underline: true });
+    pdfDoc.moveDown(0.5);
+    if (order.items) {
+      order.items.forEach(item => {
+        pdfDoc.text(`${item.productName || 'Product'} (x${item.quantity}) - $${Number(item.price || 0).toFixed(2)}`);
+      });
+    }
     
-    doc.moveDown();
-    doc.fontSize(14).text(`Total: $${order.total.toFixed(2)}`, { align: 'right' });
+    pdfDoc.moveDown();
+    pdfDoc.fontSize(14).text(`Total: $${Number(order.total || 0).toFixed(2)}`, { align: 'right' });
     
-    doc.end();
+    pdfDoc.end();
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to generate invoice' });

@@ -1,8 +1,7 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
+import { useStore } from '../hooks/useStore';
 import './CartDrawer.css';
-
-const WHATSAPP_NUMBER = 'WHATSAPP_NUMBER'; // Placeholder as requested
 
 export default function CartDrawer() {
   const { 
@@ -14,6 +13,7 @@ export default function CartDrawer() {
     clearCart, 
     cartTotal 
   } = useCart();
+  const { settings } = useStore();
 
   if (!isCartOpen) return null;
 
@@ -26,8 +26,12 @@ export default function CartDrawer() {
     });
     message += `\nTotal: HK$${cartTotal.toFixed(2)}`;
     
+    // Clean phone number (keep only digits)
+    const rawNumber = settings?.whatsapp_number || '85263595566';
+    const cleanNumber = rawNumber.replace(/\D/g, '');
+    
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodedMessage}`;
     
     window.open(whatsappUrl, '_blank');
     // Note: User explicitly asked not to auto-clear cart

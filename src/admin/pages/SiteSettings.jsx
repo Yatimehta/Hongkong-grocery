@@ -145,7 +145,19 @@ export default function SiteSettings() {
                 className="admin-input"
                 value={general.support_phone || ''}
                 onChange={e => setGeneral({ ...general, support_phone: e.target.value })}
-                placeholder="e.g. +852 9123 4567"
+                placeholder="e.g. +852 2383 2860"
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>WhatsApp Number</label>
+              <input
+                type="text"
+                className="admin-input"
+                value={general.whatsapp_number || ''}
+                onChange={e => setGeneral({ ...general, whatsapp_number: e.target.value })}
+                placeholder="e.g. 85263595566"
                 style={{ width: '100%' }}
               />
             </div>

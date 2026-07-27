@@ -12,8 +12,74 @@ const CONFIG = {
 export function StoreProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const processProductList = (rawList) => {
+    return rawList.map(p => {
+      let imgUrls = [];
+      if (Array.isArray(p.image_urls) && p.image_urls.length > 0) {
+        imgUrls = p.image_urls.filter(u => typeof u === 'string' && u.trim().length > 0);
+      }
+      if (!imgUrls.length && typeof p.images === 'string') {
+        try { imgUrls = JSON.parse(p.images); } catch(e) {}
+      }
+      if (!imgUrls.length && Array.isArray(p.images) && p.images.length > 0) {
+        imgUrls = p.images.map(img => (typeof img === 'object' && img !== null ? img.url : img)).filter(Boolean);
+      }
+      if (!imgUrls.length && Array.isArray(p.local_images) && p.local_images.length > 0) {
+        imgUrls = p.local_images.map(img => typeof img === 'string' ? (img.startsWith('/') ? img : '/' + img) : '').filter(Boolean);
+      }
+      if (!imgUrls.length && typeof p.image === 'string' && p.image.trim().length > 0) {
+        imgUrls = [p.image.trim()];
+      }
+
+      const primaryImage = imgUrls[0] || (typeof p.image === 'string' && p.image.trim().length > 0 ? p.image.trim() : '');
+
+      const catName = typeof p.category === 'object' && p.category !== null 
+        ? (p.category.name || 'Uncategorized')
+        : (typeof p.category === 'string' && p.category ? p.category : (p.categoryName || (p.categoryObj ? p.categoryObj.name : 'Uncategorized')));
+
+      return {
+        ...p,
+        id: String(p.id),
+        name: p.name || p.title || 'Grocery Item',
+        price: Number(p.price || 0),
+        image_urls: imgUrls,
+        image: primaryImage,
+        available: CONFIG.SHOW_ALL_AS_AVAILABLE ? true : (p.stock > 0 || p.in_stock),
+        slug: encodeURIComponent(String(p.id)),
+        category: catName
+      };
+    });
+  };
+
+  const processCategoryList = (rawCategories, processedProds) => {
+    const categoryNames = new Set(rawCategories.map(c => c.name));
+    let allCategories = [...rawCategories];
+    if (!categoryNames.has('Uncategorized')) {
+      allCategories.push({ id: 'uncategorized', name: 'Uncategorized', product_count: 0 });
+    }
+    const countMap = {};
+    processedProds.forEach(p => {
+      const cat = p.category || 'Uncategorized';
+      countMap[cat] = (countMap[cat] || 0) + 1;
+    });
+
+    allCategories = allCategories.map(c => ({
+      ...c,
+      liveCount: countMap[c.name] || 0,
+    }));
+
+    allCategories.sort((a, b) => {
+      if (a.liveCount === 0 && b.liveCount > 0) return 1;
+      if (b.liveCount === 0 && a.liveCount > 0) return -1;
+      return b.liveCount - a.liveCount;
+    });
+
+    return allCategories;
+  };
 
   const loadData = useCallback(async (isInitial = false) => {
     try {
@@ -22,9 +88,10 @@ export function StoreProvider({ children }) {
       let categoriesData = [];
 
       try {
-        const [apiProdRes, apiCatRes] = await Promise.all([
-          fetch('/api/products?limit=all'),
+        const [apiProdRes, apiCatRes, apiSettingsRes] = await Promise.all([
+          fetch('/api/products?limit=150'), // Fast initial 150 items batch for instant load!
           fetch('/api/categories'),
+          fetch('/api/settings?group=general'),
         ]);
 
         if (apiProdRes.ok && apiCatRes.ok) {
@@ -36,84 +103,48 @@ export function StoreProvider({ children }) {
             categoriesData = Array.isArray(catResult) ? catResult : (catResult.data || []);
           }
         }
+        if (apiSettingsRes.ok) {
+          const settingsData = await apiSettingsRes.json();
+          setSettings(settingsData || {});
+        }
       } catch (apiErr) {
         console.log('API fetch attempt fallback to static JSON:', apiErr);
       }
 
-      // Fallback to static sample json if DB is empty or API unavailable
+      // Fallback to static JSON if DB/API failed
       if (!productsData.length) {
         const [productsRes, categoriesRes] = await Promise.all([
           fetch('/data/products.json'),
           fetch('/data/categories.json'),
         ]);
 
-        if (!productsRes.ok || !categoriesRes.ok) {
-          throw new Error('Failed to load store catalog');
+        if (productsRes.ok && categoriesRes.ok) {
+          productsData = await productsRes.json();
+          categoriesData = await categoriesRes.json();
         }
-        productsData = await productsRes.json();
-        categoriesData = await categoriesRes.json();
       }
 
-      // Process products: normalize image, price and category fields for both DB and JSON structures
-      const processedProducts = productsData.map(p => {
-        let imgUrls = p.image_urls || [];
-        if (typeof p.images === 'string') {
-          try { imgUrls = JSON.parse(p.images); } catch(e) {}
-        } else if (Array.isArray(p.images)) {
-          imgUrls = p.images.map(img => (typeof img === 'object' && img !== null ? img.url : img));
-        }
-        if (p.image && !imgUrls.length) imgUrls = [p.image];
+      if (productsData.length > 0) {
+        const processed = processProductList(productsData);
+        setProducts(processed);
+        setCategories(processCategoryList(categoriesData, processed));
+        if (isInitial) setLoading(false);
 
-        const catName = typeof p.category === 'object' && p.category !== null 
-          ? (p.category.name || 'Uncategorized')
-          : (typeof p.category === 'string' && p.category ? p.category : (p.categoryName || (p.categoryObj ? p.categoryObj.name : 'Uncategorized')));
-
-        return {
-          ...p,
-          id: String(p.id),
-          name: p.name || p.title || 'Grocery Item',
-          price: Number(p.price || 0),
-          image_urls: imgUrls,
-          image: imgUrls[0] || p.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=600',
-          available: CONFIG.SHOW_ALL_AS_AVAILABLE ? true : (p.stock > 0 || p.in_stock),
-          slug: encodeURIComponent(String(p.id)),
-          category: catName
-        };
-      });
-
-      // Ensure "Uncategorized" category exists
-      const categoryNames = new Set(categoriesData.map(c => c.name));
-      let allCategories = [...categoriesData];
-      if (!categoryNames.has('Uncategorized')) {
-        allCategories.push({
-          id: 'uncategorized',
-          name: 'Uncategorized',
-          product_count: 0,
-        });
+        // Background non-blocking hydration of full 4,200 product list
+        fetch('/api/products?limit=all')
+          .then(res => res.json())
+          .then(fullResult => {
+            const fullList = fullResult.products || fullResult.data || fullResult;
+            if (Array.isArray(fullList) && fullList.length > productsData.length) {
+              const fullProcessed = processProductList(fullList);
+              setProducts(fullProcessed);
+              setCategories(processCategoryList(categoriesData, fullProcessed));
+            }
+          })
+          .catch(() => {});
+      } else {
+        if (isInitial) setLoading(false);
       }
-
-      // Compute live product counts per category
-      const countMap = {};
-      processedProducts.forEach(p => {
-        const cat = p.category || 'Uncategorized';
-        countMap[cat] = (countMap[cat] || 0) + 1;
-      });
-
-      allCategories = allCategories.map(c => ({
-        ...c,
-        liveCount: countMap[c.name] || 0,
-      }));
-
-      // Sort categories by live count (descending), keeping 0-count at end
-      allCategories.sort((a, b) => {
-        if (a.liveCount === 0 && b.liveCount > 0) return 1;
-        if (b.liveCount === 0 && a.liveCount > 0) return -1;
-        return b.liveCount - a.liveCount;
-      });
-
-      setProducts(processedProducts);
-      setCategories(allCategories);
-      if (isInitial) setLoading(false);
     } catch (err) {
       console.error('Failed to load store data:', err);
       setError(err.message);
@@ -176,6 +207,7 @@ export function StoreProvider({ children }) {
   const value = useMemo(() => ({
     products,
     categories,
+    settings,
     loading,
     error,
     config: CONFIG,
@@ -185,7 +217,7 @@ export function StoreProvider({ children }) {
     featuredCategories,
     categoryIndex,
     refreshData: () => loadData(false),
-  }), [products, categories, loading, error, searchProducts, getProductsByCategory, getProduct, featuredCategories, categoryIndex, loadData]);
+  }), [products, categories, settings, loading, error, searchProducts, getProductsByCategory, getProduct, featuredCategories, categoryIndex, loadData]);
 
   return (
     <StoreContext.Provider value={value}>

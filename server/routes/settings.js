@@ -1,6 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const prisma = require('../prismaClient');
+const { db } = require('../firebaseClient');
+
+// In-memory cache for settings
+let settingsCache = null;
+
+function clearCache() {
+  settingsCache = null;
+}
 
 const defaultSettings = {
   general: {
@@ -15,6 +22,7 @@ const defaultSettings = {
     notice_banner_active: 'true',
     notice_banner_text: '🎉 Free Same-Day Delivery on all organic orders over $50!',
     store_url: 'https://example.com',
+    whatsapp_number: '85263595566',
     admin_orders_url: '/admin/orders.php',
     facebook_url: '',
     instagram_url: '',
@@ -77,19 +85,16 @@ const defaultSettings = {
   }
 };
 
-// Helper function to seed defaults if missing
+// Helper function to seed defaults if missing in Firestore
 async function seedGroupDefaults(group) {
   const defaults = defaultSettings[group];
   if (!defaults) return;
 
   for (const [key, value] of Object.entries(defaults)) {
-    const existing = await prisma.setting.findUnique({
-      where: { key }
-    });
-    if (!existing) {
-      await prisma.setting.create({
-        data: { key, value: String(value) }
-      });
+    const docRef = db.collection('settings').doc(key);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      await docRef.set({ key, value: String(value) });
     }
   }
 }
@@ -99,35 +104,63 @@ router.get('/', async (req, res) => {
   try {
     const { group } = req.query;
     
-    if (group && defaultSettings[group]) {
-      await seedGroupDefaults(group);
-      const keys = Object.keys(defaultSettings[group]);
-      const settings = await prisma.setting.findMany({
-        where: { key: { in: keys } }
-      });
-      const result = {};
-      settings.forEach(s => { result[s.key] = s.value; });
-      return res.json(result);
-    } else {
-      // Seed all groups
-      for (const g of Object.keys(defaultSettings)) {
-        await seedGroupDefaults(g);
-      }
-      const allSettings = await prisma.setting.findMany();
-      const result = {};
-      allSettings.forEach(s => {
-        // Find which group this key belongs to
-        let foundGroup = 'general';
+    if (!settingsCache) {
+      console.log('Cache miss: loading all settings from Firestore...');
+      
+      try {
+        // Try seeding defaults (may fail if reads exhausted)
+        for (const g of Object.keys(defaultSettings)) {
+          try { await seedGroupDefaults(g); } catch (e) { /* skip if read fails */ }
+        }
+        
+        const snapshot = await db.collection('settings').get();
+        const allSettings = [];
+        snapshot.forEach(doc => allSettings.push(doc.data()));
+
+        const cacheObj = {};
+        allSettings.forEach(s => {
+          let foundGroup = 'general';
+          for (const [g, keysObj] of Object.entries(defaultSettings)) {
+            if (keysObj.hasOwnProperty(s.key)) {
+              foundGroup = g;
+              break;
+            }
+          }
+          if (!cacheObj[foundGroup]) cacheObj[foundGroup] = {};
+          cacheObj[foundGroup][s.key] = s.value;
+        });
+
+        // Fill in defaults for any missing keys
         for (const [g, keysObj] of Object.entries(defaultSettings)) {
-          if (keysObj.hasOwnProperty(s.key)) {
-            foundGroup = g;
-            break;
+          if (!cacheObj[g]) cacheObj[g] = {};
+          for (const [k, v] of Object.entries(keysObj)) {
+            if (cacheObj[g][k] === undefined) {
+              cacheObj[g][k] = String(v);
+            }
           }
         }
-        if (!result[foundGroup]) result[foundGroup] = {};
-        result[foundGroup][s.key] = s.value;
-      });
-      return res.json(result);
+
+        settingsCache = cacheObj;
+      } catch (firestoreErr) {
+        console.error('Firestore settings read failed, using defaults:', firestoreErr.message || firestoreErr);
+        // Use defaults as cache
+        const cacheObj = {};
+        for (const [g, keysObj] of Object.entries(defaultSettings)) {
+          cacheObj[g] = {};
+          for (const [k, v] of Object.entries(keysObj)) {
+            cacheObj[g][k] = String(v);
+          }
+        }
+        settingsCache = cacheObj;
+      }
+    } else {
+      console.log('Cache hit: serving settings from VPS memory');
+    }
+
+    if (group && defaultSettings[group]) {
+      return res.json(settingsCache[group] || {});
+    } else {
+      return res.json(settingsCache);
     }
   } catch (err) {
     console.error('Error fetching settings:', err);
@@ -146,13 +179,20 @@ router.put('/:group', async (req, res) => {
     }
 
     let updatedCount = 0;
+    const batch = db.batch();
     for (const [key, value] of Object.entries(updates)) {
-      await prisma.setting.upsert({
-        where: { key },
-        update: { value: String(value) },
-        create: { key, value: String(value) }
-      });
+      const docRef = db.collection('settings').doc(key);
+      batch.set(docRef, { key, value: String(value) }, { merge: true });
       updatedCount++;
+    }
+    await batch.commit();
+
+    // Update cache directly instead of clearing (avoids Firestore re-read)
+    if (settingsCache) {
+      if (!settingsCache[group]) settingsCache[group] = {};
+      for (const [key, value] of Object.entries(updates)) {
+        settingsCache[group][key] = String(value);
+      }
     }
 
     res.json({ success: true, updatedCount, message: `Successfully saved ${group} settings!` });

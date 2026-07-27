@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { ShoppingBag, Check, Plus, Minus } from 'lucide-react';
 import './AddToCart.css';
 
 export default function AddToCart({ product, compact = false }) {
@@ -31,16 +32,28 @@ export default function AddToCart({ product, compact = false }) {
   return (
     <div className={`add-to-cart-widget ${compact ? 'compact' : ''}`} onClick={(e) => e.stopPropagation()}>
       <div className="qty-selector">
-        <button className="qty-btn" onClick={decrement} disabled={quantity <= 1}>-</button>
+        <button className="qty-btn" onClick={decrement} disabled={quantity <= 1} aria-label="Decrease quantity">
+          <Minus size={14} />
+        </button>
         <span className="qty-display">{quantity}</span>
-        <button className="qty-btn" onClick={increment}>+</button>
+        <button className="qty-btn" onClick={increment} aria-label="Increase quantity">
+          <Plus size={14} />
+        </button>
       </div>
       <button 
         className={`btn btn-primary btn-add ${added ? 'added' : ''}`}
         onClick={handleAdd}
         disabled={!product.available}
       >
-        {added ? '✓ Added' : 'Add to Cart'}
+        {added ? (
+          <>
+            <Check size={16} /> Added
+          </>
+        ) : (
+          <>
+            <ShoppingBag size={16} /> Add to Cart
+          </>
+        )}
       </button>
     </div>
   );

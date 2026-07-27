@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Plus, Edit2, Trash2, Search, Upload, X, Star, Package } from 'lucide-react';
 
 export default function Products() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -45,8 +47,10 @@ export default function Products() {
         fetch('/api/categories'),
         fetch('/api/brands')
       ]);
-      setCategories(await catRes.json());
-      setBrands(await brandRes.json());
+      const catsData = await catRes.json();
+      const brandsData = await brandRes.json();
+      setCategories(Array.isArray(catsData) ? catsData : []);
+      setBrands(Array.isArray(brandsData) ? brandsData : []);
     } catch (err) {
       console.error(err);
     }
@@ -135,7 +139,7 @@ export default function Products() {
     }
 
     const method = editingId ? 'PUT' : 'POST';
-    const url = editingId ? `/api/products/${editingId}` : '/api/products';
+    const url = editingId ? `/api/products/${encodeURIComponent(editingId)}` : '/api/products';
 
     try {
       const res = await fetch(url, {
@@ -159,7 +163,7 @@ export default function Products() {
     if (!window.confirm('Are you sure you want to delete this product? This cannot be undone.')) return;
     
     try {
-      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/products/${encodeURIComponent(id)}`, { method: 'DELETE' });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error);
@@ -175,7 +179,7 @@ export default function Products() {
     <div>
       <div className="admin-page-header">
         <h1>Products</h1>
-        <button className="admin-btn" onClick={() => handleOpenModal()}>
+        <button className="admin-btn" onClick={() => navigate('/admin/products/new')}>
           <Plus size={18} style={{ marginRight: '0.5rem' }} /> Add Product
         </button>
       </div>
@@ -204,7 +208,7 @@ export default function Products() {
             <Package size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
             <h3>No products found</h3>
             <p>Get started by creating your first product.</p>
-            <button className="admin-btn" style={{ marginTop: '1rem' }} onClick={() => handleOpenModal()}>Add Product</button>
+            <button className="admin-btn" style={{ marginTop: '1rem' }} onClick={() => navigate('/admin/products/new')}>Add Product</button>
           </div>
         ) : (
           <div className="admin-table-container">
@@ -236,7 +240,7 @@ export default function Products() {
                         </div>
                       </td>
                       <td>{p.sku}</td>
-                      <td>HK${p.price.toFixed(2)}</td>
+                      <td>HK${p.price ? p.price.toFixed(2) : '0.00'}</td>
                       <td>{p.stock} {p.unit}</td>
                       <td>
                         <span style={{ 
@@ -248,7 +252,7 @@ export default function Products() {
                         </span>
                       </td>
                       <td style={{ textAlign: 'right' }}>
-                        <button className="icon-btn" onClick={() => handleOpenModal(p)} title="Edit"><Edit2 size={18} /></button>
+                        <button className="icon-btn" onClick={() => navigate(`/admin/products/edit/${p.id}`)} title="Edit Product"><Edit2 size={18} /></button>
                         <button className="icon-btn" onClick={() => handleDelete(p.id)} title="Delete" style={{ color: '#ef4444' }}><Trash2 size={18} /></button>
                       </td>
                     </tr>
@@ -293,14 +297,14 @@ export default function Products() {
                     <label>Category</label>
                     <select className="admin-input" value={formData.categoryId} onChange={e => setFormData({...formData, categoryId: e.target.value})}>
                       <option value="">Select Category</option>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      {Array.isArray(categories) && categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div className="form-group">
                     <label>Brand</label>
                     <select className="admin-input" value={formData.brandId} onChange={e => setFormData({...formData, brandId: e.target.value})}>
                       <option value="">Select Brand</option>
-                      {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      {Array.isArray(brands) && brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
                   </div>
 

@@ -1,6 +1,6 @@
 const express = require('express');
 const authMiddleware = require('../middleware/auth');
-const prisma = require('../prismaClient');
+const { db } = require('../firebaseClient');
 
 const router = express.Router();
 
@@ -76,22 +76,41 @@ router.use('/system', systemRouter);
 // --- DASHBOARD ---
 router.get('/dashboard', async (req, res) => {
   try {
-    const totalOrders = await prisma.order.count();
-    const totalRevenueResult = await prisma.order.aggregate({ _sum: { total: true }, where: { paymentStatus: 'paid' } });
-    const totalRevenue = totalRevenueResult._sum.total || 0;
-    
-    const productsCount = await prisma.product.count();
-    const customersCount = await prisma.customer.count();
+    // Use caches instead of Firestore reads where possible
+    let orders = [];
+    try {
+      const ordersSnapshot = await db.collection('orders').get();
+      ordersSnapshot.forEach(doc => orders.push({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.log('Dashboard: orders read failed, using empty');
+    }
+
+    // Products count from cache
+    let productsCount = 0;
+    try {
+      const prodRoute = require('./products');
+      const prodCache = prodRoute.getCache ? prodRoute.getCache() : null;
+      productsCount = prodCache ? prodCache.length : 0;
+    } catch (e) {}
+
+    // Customers count
+    let customersCount = 0;
+    try {
+      const customersSnapshot = await db.collection('customers').get();
+      customersCount = customersSnapshot.size;
+    } catch (e) {
+      console.log('Dashboard: customers read failed, using 0');
+    }
+
+    const totalOrders = orders.length;
+    const paidOrders = orders.filter(o => o.paymentStatus === 'paid');
+    const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
 
     // Last 7 days revenue
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentOrders = await prisma.order.findMany({
-      where: { date: { gte: sevenDaysAgo }, paymentStatus: 'paid' },
-      select: { total: true, date: true }
-    });
+    const recentOrders = paidOrders.filter(o => new Date(o.date) >= sevenDaysAgo);
 
-    // Group by day for the chart
     const revenueByDay = {};
     for (let i = 0; i < 7; i++) {
       const d = new Date();
@@ -100,53 +119,66 @@ router.get('/dashboard', async (req, res) => {
     }
     
     recentOrders.forEach(order => {
-      const day = order.date.toISOString().split('T')[0];
+      const day = order.date ? order.date.split('T')[0] : '';
       if (revenueByDay[day] !== undefined) {
-        revenueByDay[day] += order.total;
+        revenueByDay[day] += Number(order.total || 0);
       }
     });
 
-    // Order status breakdown
-    const orderStatuses = await prisma.order.groupBy({
-      by: ['orderStatus'],
-      _count: { orderStatus: true }
+    const statusCounts = {};
+    orders.forEach(o => {
+      const status = o.orderStatus || 'pending';
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
     });
+    const orderStatuses = Object.keys(statusCounts).map(status => ({
+      status,
+      count: statusCounts[status]
+    }));
 
-    // Recent 5 orders
-    const latestOrders = await prisma.order.findMany({
-      take: 5,
-      orderBy: { date: 'desc' },
-      include: { customer: { select: { name: true } } }
-    });
+    const latestOrders = [...orders]
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5)
+      .map(o => ({
+        ...o,
+        customer: o.customer ? { name: o.customer.name } : null
+      }));
 
-    // Top 5 Products by units sold
-    const topProductsRaw = await prisma.orderItem.groupBy({
-      by: ['productId'],
-      _sum: { quantity: true },
-      orderBy: { _sum: { quantity: 'desc' } },
-      take: 5
-    });
-
-    const topProducts = await Promise.all(
-      topProductsRaw.map(async (tp) => {
-        const product = await prisma.product.findUnique({
-          where: { id: tp.productId },
-          select: { name: true, sku: true, price: true }
+    // Top Products from cache
+    const itemSales = {};
+    orders.forEach(o => {
+      if (o.items) {
+        o.items.forEach(item => {
+          itemSales[item.productId] = (itemSales[item.productId] || 0) + Number(item.quantity || 0);
         });
-        return {
-          id: tp.productId,
-          name: product?.name || 'Unknown Product',
-          sku: product?.sku,
-          price: product?.price,
-          unitsSold: tp._sum.quantity || 0
-        };
-      })
-    );
+      }
+    });
+
+    const topProductsRaw = Object.keys(itemSales)
+      .map(productId => ({ productId, quantity: itemSales[productId] }))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5);
+
+    let prodCacheArr = [];
+    try {
+      const prodRoute = require('./products');
+      prodCacheArr = prodRoute.getCache ? (prodRoute.getCache() || []) : [];
+    } catch (e) {}
+
+    const topProducts = topProductsRaw.map(tp => {
+      const pData = prodCacheArr.find(p => p.id === tp.productId);
+      return {
+        id: tp.productId,
+        name: pData?.name || 'Unknown Product',
+        sku: pData?.sku || '',
+        price: pData?.price || 0,
+        unitsSold: tp.quantity
+      };
+    });
 
     res.json({
       stats: { totalOrders, totalRevenue, productsCount, customersCount },
       revenueChart: Object.keys(revenueByDay).map(date => ({ date, amount: revenueByDay[date] })).reverse(),
-      orderStatuses: orderStatuses.map(s => ({ status: s.orderStatus, count: s._count.orderStatus })),
+      orderStatuses,
       latestOrders,
       topProducts
     });
@@ -157,3 +189,4 @@ router.get('/dashboard', async (req, res) => {
 });
 
 module.exports = router;
+

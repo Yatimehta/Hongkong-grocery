@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
+import ProductEditPage from './pages/ProductEditPage';
 import Categories from './pages/Categories';
 import Inventory from './pages/Inventory';
 import Orders from './pages/Orders';
@@ -72,6 +73,8 @@ export default function AdminApp() {
           
           {/* Products Management */}
           <Route path="products" element={<Products />} />
+          <Route path="products/new" element={<ProductEditPage />} />
+          <Route path="products/edit/:id" element={<ProductEditPage />} />
           <Route path="categories" element={<Categories />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="orders" element={<Orders />} />

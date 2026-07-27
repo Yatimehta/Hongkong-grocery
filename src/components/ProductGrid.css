@@ -1,4 +1,4 @@
-/* === ProductGrid === */
+/* === Responsive ProductGrid === */
 .product-grid-wrapper {
   display: flex;
   flex-direction: column;
@@ -74,16 +74,17 @@
   }
 }
 
+/* 2 Columns on Mobile Screens */
 @media (max-width: 768px) {
   .product-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-4);
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--space-3) !important;
   }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 480px) {
   .product-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-3);
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
 }

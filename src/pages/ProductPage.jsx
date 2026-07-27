@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../hooks/useStore';
 import Placeholder from '../components/Placeholder';
 import AddToCart from '../components/AddToCart';
+import { MapPin, Package } from 'lucide-react';
 import './ProductPage.css';
 
 export default function ProductPage() {
@@ -34,7 +35,7 @@ export default function ProductPage() {
   if (!product) {
     return (
       <div className="empty-state container">
-        <span className="empty-state-icon">📦</span>
+        <Package size={48} className="empty-state-icon" />
         <h2>Product Not Found</h2>
         <p>We couldn't find the product you're looking for.</p>
         <button onClick={() => navigate(-1)} className="btn btn-outline">Go Back</button>
@@ -69,7 +70,7 @@ export default function ProductPage() {
               className="product-detail-image"
               onError={(e) => {
                 e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
+                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
               }}
             />
           ) : null}
@@ -105,9 +106,9 @@ export default function ProductPage() {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="btn btn-outline btn-lg"
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
               >
-                <span className="icon">📍</span> Visit Store
+                <MapPin size={18} /> Visit Store
               </a>
             </div>
           </div>
