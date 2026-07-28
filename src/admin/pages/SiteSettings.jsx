@@ -145,7 +145,7 @@ export default function SiteSettings() {
                 className="admin-input"
                 value={general.support_phone || ''}
                 onChange={e => setGeneral({ ...general, support_phone: e.target.value })}
-                placeholder="e.g. +852 2383 2860"
+                placeholder="e.g. +852 9029 1454"
                 style={{ width: '100%' }}
               />
             </div>
@@ -157,7 +157,7 @@ export default function SiteSettings() {
                 className="admin-input"
                 value={general.whatsapp_number || ''}
                 onChange={e => setGeneral({ ...general, whatsapp_number: e.target.value })}
-                placeholder="e.g. 85263595566"
+                placeholder="e.g. 85290291454"
                 style={{ width: '100%' }}
               />
             </div>
