@@ -24,6 +24,27 @@ body {
   overflow: hidden;
 }
 
+/* HIGH CONTRAST TYPOGRAPHY OVERRIDES FOR ADMIN PANEL */
+.admin-layout h1,
+.admin-layout h2,
+.admin-layout h3,
+.admin-layout h4,
+.admin-layout h5,
+.admin-layout h6,
+.admin-page-header h1,
+.admin-card h1,
+.admin-card h2,
+.admin-card h3,
+.admin-card h4 {
+  color: #f8fafc !important;
+  opacity: 1 !important;
+}
+
+.admin-layout p,
+.admin-layout label {
+  color: #cbd5e1;
+}
+
 /* Sidebar */
 .admin-sidebar {
   width: var(--admin-sidebar-width);
@@ -47,7 +68,7 @@ body {
 .admin-sidebar-header h2 {
   margin: 0;
   font-size: 1.25rem;
-  color: var(--admin-text-primary);
+  color: #f8fafc !important;
 }
 
 .admin-sidebar-close-btn {
@@ -112,7 +133,7 @@ body {
 
 .admin-sidebar-nav a.active {
   background-color: var(--admin-accent);
-  color: white;
+  color: white !important;
   border-left: 3px solid white;
 }
 
@@ -129,7 +150,7 @@ body {
   padding: 0.75rem;
   background: transparent;
   border: 1px solid var(--admin-border);
-  color: #ef4444;
+  color: #ef4444 !important;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
@@ -255,6 +276,7 @@ body {
 .admin-profile-name {
   font-size: 0.9rem;
   font-weight: 500;
+  color: #f8fafc !important;
 }
 
 /* Content Area */
@@ -275,16 +297,17 @@ body {
 .admin-page-header h1 {
   margin: 0;
   font-size: 1.75rem;
-  font-weight: 600;
+  font-weight: 700;
+  color: #f8fafc !important;
 }
 
 .admin-btn {
   background-color: var(--admin-accent);
-  color: white;
+  color: white !important;
   border: none;
   padding: 0.75rem 1.25rem;
   border-radius: 6px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -301,7 +324,7 @@ body {
 .admin-btn.secondary {
   background-color: transparent;
   border: 1px solid var(--admin-border);
-  color: var(--admin-text-primary);
+  color: var(--admin-text-primary) !important;
 }
 
 .admin-btn.secondary:hover {
@@ -317,14 +340,14 @@ body {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--admin-text-secondary);
+  color: #cbd5e1 !important;
 }
 
 .admin-input {
   width: 100%;
   background-color: var(--admin-bg);
   border: 1px solid var(--admin-border);
-  color: var(--admin-text-primary);
+  color: #f8fafc !important;
   padding: 0.75rem;
   border-radius: 6px;
   outline: none;
@@ -359,7 +382,7 @@ body {
 
 /* Tables */
 .admin-table-container {
-  overflow-x: auto;
+  overflow-x: auto !important;
   -webkit-overflow-scrolling: touch;
   background-color: var(--admin-card-bg);
   border: 1px solid var(--admin-border);
@@ -367,27 +390,33 @@ body {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  margin-bottom: 1rem;
 }
 
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px;
+  min-width: 540px;
 }
 
 .admin-table th, .admin-table td {
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 1rem;
   text-align: left;
   border-bottom: 1px solid var(--admin-border);
+  color: #f8fafc !important;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .admin-table th {
-  color: var(--admin-text-secondary);
-  font-weight: 500;
-  font-size: 0.875rem;
+  color: #94a3b8 !important;
+  font-weight: 600;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 .admin-table tr:last-child td {
@@ -395,7 +424,7 @@ body {
 }
 
 .admin-table tr:hover td {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 /* MOBILE RESPONSIVE MEDIA QUERIES (<768px) */
@@ -438,13 +467,13 @@ body {
   }
 
   .admin-header {
-    padding: 0 1rem;
+    padding: 0 0.85rem;
     height: 56px;
   }
 
   .admin-header-search {
     width: 100%;
-    max-width: 180px;
+    max-width: 160px;
     padding: 0.35rem 0.65rem;
   }
 
@@ -452,19 +481,22 @@ body {
     display: none;
   }
 
+  /* Extra Bottom Padding for Mobile Navigation Dock / Mobile Browser Address Bar */
   .admin-content {
-    padding: 1rem;
+    padding: 0.85rem;
+    padding-bottom: 6rem !important;
   }
 
   .admin-page-header {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
   }
 
   .admin-page-header h1 {
-    font-size: 1.35rem;
+    font-size: 1.4rem !important;
+    color: #f8fafc !important;
   }
 
   .admin-btn {
@@ -486,9 +518,14 @@ body {
 
   /* Form & Settings Cards */
   .admin-card {
-    padding: 1rem;
+    padding: 0.85rem;
     width: 100% !important;
     max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .admin-card h2, .admin-card h3 {
+    color: #f8fafc !important;
   }
 }
 
