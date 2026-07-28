@@ -28,10 +28,10 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const storeAddress = settings?.store_address || 'G/F, 65-67 South Wall Road, Kowloon City';
-  const supportPhone = settings?.support_phone || '+852 2383 2860';
-  const rawWhatsApp = settings?.whatsapp_number || '85263595566';
+  const supportPhone = settings?.support_phone || '+852 9029 1454';
+  const rawWhatsApp = settings?.whatsapp_number || '85290291454';
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
-  const displayWhatsApp = rawWhatsApp === '85263595566' ? '+852 6359 5566' : rawWhatsApp;
+  const displayWhatsApp = rawWhatsApp === '85290291454' ? '+852 9029 1454' : rawWhatsApp;
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -170,7 +170,7 @@ export default function HomePage() {
           </div>
 
           <div className="circle-categories-row">
-            {CATEGORY_CIRCLES.map((cat) => (
+            {CATEGORY_CIRCLES.filter(cat => getProductsByCategory(cat.name).length > 0).map((cat) => (
               <Link
                 key={cat.name}
                 to={`/category/${encodeURIComponent(cat.name)}`}

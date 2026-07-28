@@ -10,10 +10,10 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({ name: '', contactInfo: '', subject: 'General Question', message: '' });
 
   const storeAddress = settings?.store_address || 'G/F, 65-67 South Wall Road, Kowloon City, Hong Kong';
-  const supportPhone = settings?.support_phone || '+852 2383 2860';
-  const rawWhatsApp = settings?.whatsapp_number || '85263595566';
+  const supportPhone = settings?.support_phone || '+852 9029 1454';
+  const rawWhatsApp = settings?.whatsapp_number || '85290291454';
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
-  const displayWhatsApp = rawWhatsApp === '85263595566' ? '+852 6359 5566' : rawWhatsApp;
+  const displayWhatsApp = rawWhatsApp === '85290291454' ? '+852 9029 1454' : rawWhatsApp;
   const contactEmail = settings?.contact_email || 'info@waqas.com.hk';
   const facebookUrl = 'https://www.facebook.com/share/18w3391ea6/?mibextid=wwXIfr';
 

@@ -70,13 +70,9 @@ export function StoreProvider({ children }) {
     allCategories = allCategories.map(c => ({
       ...c,
       liveCount: countMap[c.name] || 0,
-    }));
+    })).filter(c => c.liveCount > 0);
 
-    allCategories.sort((a, b) => {
-      if (a.liveCount === 0 && b.liveCount > 0) return 1;
-      if (b.liveCount === 0 && a.liveCount > 0) return -1;
-      return b.liveCount - a.liveCount;
-    });
+    allCategories.sort((a, b) => b.liveCount - a.liveCount);
 
     return allCategories;
   };

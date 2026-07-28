@@ -27,7 +27,7 @@ export default function CartDrawer() {
     message += `\nTotal: HK$${cartTotal.toFixed(2)}`;
     
     // Clean phone number (keep only digits)
-    const rawNumber = settings?.whatsapp_number || '85263595566';
+    const rawNumber = settings?.whatsapp_number || '85290291454';
     const cleanNumber = rawNumber.replace(/\D/g, '');
     
     const encodedMessage = encodeURIComponent(message);
