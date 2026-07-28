@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../hooks/useStore';
 import { MapPin, Phone, MessageSquare, Mail, Clock, Send, CheckCircle } from 'lucide-react';
+import FacebookIcon from '../components/icons/FacebookIcon';
 import './ContactPage.css';
 
 export default function ContactPage() {
@@ -14,6 +15,7 @@ export default function ContactPage() {
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
   const displayWhatsApp = rawWhatsApp === '85263595566' ? '+852 6359 5566' : rawWhatsApp;
   const contactEmail = settings?.contact_email || 'info@waqas.com.hk';
+  const facebookUrl = 'https://www.facebook.com/share/18w3391ea6/?mibextid=wwXIfr';
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -70,6 +72,25 @@ export default function ContactPage() {
               className="contact-action-btn whatsapp-action-btn"
             >
               <MessageSquare size={18} /> Chat on WhatsApp ({displayWhatsApp})
+            </a>
+          </div>
+        </div>
+
+        {/* Facebook Page */}
+        <div className="contact-card contact-card-facebook">
+          <div className="contact-card-icon-box facebook-box">
+            <FacebookIcon size={24} />
+          </div>
+          <div className="contact-card-content">
+            <h3>Facebook Page</h3>
+            <p className="contact-text">Follow us for weekly special offers, new arrivals & community updates.</p>
+            <a 
+              href={facebookUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="contact-action-btn facebook-action-btn"
+            >
+              <FacebookIcon size={18} /> Visit Facebook Page
             </a>
           </div>
         </div>

@@ -7,6 +7,7 @@ import {
   Search, Truck, ShieldCheck, MapPin, Phone, MessageSquare, 
   Sparkles, TrendingUp, ChevronRight, Award, ArrowRight, Store, CheckCircle2, Flame
 } from 'lucide-react';
+import FacebookIcon from '../components/icons/FacebookIcon';
 import './HomePage.css';
 
 // Curated high-res category imagery for circular icons
@@ -404,6 +405,18 @@ export default function HomePage() {
                   <span className="contact-label">Call Support</span>
                   <a href={`tel:${supportPhone.replace(/\s+/g, '')}`}>
                     {supportPhone}
+                  </a>
+                </div>
+              </div>
+
+              <div className="contact-link-item">
+                <div className="contact-icon-bubble facebook-bubble">
+                  <FacebookIcon size={18} />
+                </div>
+                <div>
+                  <span className="contact-label">Facebook Page</span>
+                  <a href="https://www.facebook.com/share/18w3391ea6/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer">
+                    Follow Us on Facebook
                   </a>
                 </div>
               </div>

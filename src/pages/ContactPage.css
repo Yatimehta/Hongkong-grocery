@@ -76,6 +76,11 @@
   color: #15803D;
 }
 
+.facebook-box {
+  background: #E0F2FE;
+  color: #1877F2;
+}
+
 .phone-box {
   background: #E0F2FE;
   color: #0369A1;
@@ -146,6 +151,16 @@
 
 .whatsapp-action-btn:hover {
   background: #1EBE5A;
+}
+
+.facebook-action-btn {
+  background: #1877F2;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
+}
+
+.facebook-action-btn:hover {
+  background: #0C63D4;
 }
 
 .phone-action-btn {

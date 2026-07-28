@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../hooks/useStore';
 import { MapPin, Phone, MessageCircle, Mail } from 'lucide-react';
+import FacebookIcon from './icons/FacebookIcon';
 import './Footer.css';
 import HoursTable from './HoursTable';
 
@@ -15,6 +16,7 @@ export default function Footer() {
   const rawWhatsApp = settings?.whatsapp_number || '85263595566';
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
   const contactEmail = settings?.contact_email || 'info@waqas.com.hk';
+  const facebookUrl = 'https://www.facebook.com/share/18w3391ea6/?mibextid=wwXIfr';
 
   const displayWhatsApp = rawWhatsApp === '85263595566' ? '+852 6359 5566' : rawWhatsApp;
 
@@ -44,6 +46,12 @@ export default function Footer() {
                 </a>
               </p>
               <p className="footer-contact-item">
+                <FacebookIcon size={18} className="footer-icon" />
+                <a href={facebookUrl} target="_blank" rel="noopener noreferrer">
+                  Facebook Page
+                </a>
+              </p>
+              <p className="footer-contact-item">
                 <Mail size={18} className="footer-icon" />
                 <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
               </p>
@@ -62,11 +70,35 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Hours */}
+          {/* Hours & Social */}
           <div className="footer-section">
             <h3 className="footer-title">Store Hours</h3>
             <div className="footer-hours">
               <HoursTable />
+            </div>
+            
+            <div className="footer-social-wrap mt-3">
+              <span className="footer-social-label">Follow Us:</span>
+              <div className="footer-social-bar">
+                <a 
+                  href={facebookUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  aria-label="Facebook Page"
+                  className="footer-social-icon-btn"
+                >
+                  <FacebookIcon size={18} />
+                </a>
+                <a 
+                  href={`https://wa.me/${cleanWhatsApp}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  aria-label="WhatsApp Support"
+                  className="footer-social-icon-btn"
+                >
+                  <MessageCircle size={18} />
+                </a>
+              </div>
             </div>
           </div>
         </div>
