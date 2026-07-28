@@ -23,7 +23,7 @@ const CATEGORY_CIRCLES = [
 ];
 
 export default function HomePage() {
-  const { products, categories, loading, error, settings } = useStore();
+  const { products, categories, loading, error, settings, getProductsByCategory, categoryIndex } = useStore();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
