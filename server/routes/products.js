@@ -69,13 +69,91 @@ router.get('/', async (req, res) => {
 
     let productsList = [...productsCache];
 
-    // In-memory filtering
+    // In-memory fuzzy & synonym search
     if (search) {
-      const q = search.toLowerCase();
-      productsList = productsList.filter(p => 
-        (p.name && p.name.toLowerCase().includes(q)) || 
-        (p.sku && p.sku.toLowerCase().includes(q))
-      );
+      const GROCERY_SYNONYMS = {
+        'jeera': ['jera', 'jira', 'zeera', 'zira', 'cumin'],
+        'jera': ['jeera', 'jira', 'zeera', 'zira', 'cumin'],
+        'jira': ['jeera', 'jera', 'zeera', 'zira', 'cumin'],
+        'zeera': ['jeera', 'jera', 'jira', 'zira', 'cumin'],
+        'cumin': ['jeera', 'jera', 'jira', 'zeera', 'zira'],
+        'turmeric': ['haldi', 'haldhi'],
+        'haldi': ['turmeric', 'haldhi'],
+        'coriander': ['dhania', 'dhaniya', 'daniya'],
+        'dhania': ['coriander', 'dhaniya', 'daniya'],
+        'atta': ['ata', 'flour'],
+        'flour': ['atta', 'ata', 'maida'],
+        'dal': ['daal', 'dhal', 'lentil', 'pulse'],
+        'daal': ['dal', 'dhal', 'lentil'],
+        'chana': ['channa', 'chole', 'chickpea'],
+        'chole': ['chana', 'channa', 'chickpea'],
+        'rice': ['basmati', 'chawal'],
+        'basmati': ['rice'],
+        'ghee': ['ghi'],
+        'elaichi': ['cardamom', 'elachi'],
+        'cardamom': ['elaichi', 'elachi']
+      };
+
+      function levDist(a, b) {
+        if (a === b) return 0;
+        if (!a.length) return b.length;
+        if (!b.length) return a.length;
+        const m = [];
+        for (let i = 0; i <= b.length; i++) m[i] = [i];
+        for (let j = 0; j <= a.length; j++) m[0][j] = j;
+        for (let i = 1; i <= b.length; i++) {
+          for (let j = 1; j <= a.length; j++) {
+            m[i][j] = b.charAt(i - 1) === a.charAt(j - 1) ? m[i - 1][j - 1] : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
+          }
+        }
+        return m[b.length][a.length];
+      }
+
+      function wordMatch(sw, tw) {
+        if (tw.includes(sw) || sw.includes(tw)) return true;
+        const syns = GROCERY_SYNONYMS[sw] || [];
+        if (syns.some(s => tw.includes(s))) return true;
+        if (sw.length >= 3 && tw.length >= 3) {
+          const maxD = sw.length > 5 ? 2 : 1;
+          if (levDist(sw, tw) <= maxD) return true;
+        }
+        return false;
+      }
+
+      const q = search.toLowerCase().trim();
+      const terms = q.split(/\s+/);
+
+      const scored = [];
+      for (const p of productsList) {
+        const name = (p.name || '').toLowerCase();
+        const category = (p.category ? (typeof p.category === 'object' ? p.category.name : p.category) : '').toLowerCase();
+        const targetWords = `${name} ${category}`.split(/[^a-z0-9]+/);
+
+        let matchCount = 0;
+        let score = name.includes(q) ? 500 : 0;
+
+        for (const term of terms) {
+          if (name.includes(term)) {
+            matchCount++;
+            score += 100;
+            continue;
+          }
+          for (const tw of targetWords) {
+            if (tw && wordMatch(term, tw)) {
+              matchCount++;
+              score += 60;
+              break;
+            }
+          }
+        }
+
+        if (matchCount === terms.length) {
+          scored.push({ product: p, score });
+        }
+      }
+
+      scored.sort((a, b) => b.score - a.score);
+      productsList = scored.map(s => s.product);
     }
     if (categoryId) {
       productsList = productsList.filter(p => p.categoryId === categoryId);

@@ -15,10 +15,10 @@
 .qty-selector {
   display: flex;
   align-items: center;
-  border: 1px solid var(--color-border);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-white);
-  height: 38px;
+  height: 44px;
   overflow: hidden;
   transition: border-color 200ms ease;
 }
@@ -28,14 +28,14 @@
 }
 
 .compact .qty-selector {
-  height: 36px;
-  flex: 0 0 84px;
+  height: 42px;
+  flex: 0 0 92px;
 }
 
 .qty-btn {
   background: none;
   border: none;
-  width: 28px;
+  width: 30px;
   height: 100%;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -56,34 +56,38 @@
 }
 
 .compact .qty-btn {
-  width: 24px;
+  width: 28px;
 }
 
 .qty-display {
   flex: 1;
   text-align: center;
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--font-size-sm);
   color: var(--color-text);
-  min-width: 20px;
+  min-width: 22px;
 }
 
 .btn-add {
   flex: 1;
+  min-height: 46px;
   transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  font-weight: 600;
+  gap: 0.4rem;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
   border-radius: var(--radius-md);
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(92, 179, 73, 0.22);
 }
 
 .compact .btn-add {
-  height: 36px;
-  padding: 0 var(--space-2);
-  font-size: var(--font-size-xs);
+  min-height: 44px;
+  padding: 0 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 .btn-add.added {
@@ -102,22 +106,22 @@
   }
 
   .compact .qty-selector {
-    height: 32px;
+    height: 36px;
     width: 100%;
     flex: none;
     justify-content: space-between;
   }
 
   .compact .qty-btn {
-    width: 32px;
+    width: 36px;
   }
 
   .compact .btn-add {
-    height: 34px;
+    min-height: 44px; /* Comfortable 44px touch target height */
     width: 100%;
-    padding: 0 6px;
-    font-size: 11px;
-    font-weight: 700;
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: 800;
     justify-content: center;
     letter-spacing: -0.01em;
   }

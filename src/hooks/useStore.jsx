@@ -177,16 +177,210 @@ export function StoreProvider({ children }) {
     return index;
   }, [products]);
 
-  // Search products by name (simple case-insensitive substring match)
+  // Synonyms & Transliterations dictionary for common grocery items
+  const GROCERY_SYNONYMS = useMemo(() => ({
+    'jeera': ['jera', 'jira', 'zeera', 'zira', 'cumin', 'cummin'],
+    'jera': ['jeera', 'jira', 'zeera', 'zira', 'cumin'],
+    'jira': ['jeera', 'jera', 'zeera', 'zira', 'cumin'],
+    'zeera': ['jeera', 'jera', 'jira', 'zira', 'cumin'],
+    'zira': ['jeera', 'jera', 'jira', 'zeera', 'cumin'],
+    'cumin': ['jeera', 'jera', 'jira', 'zeera', 'zira'],
+
+    'turmeric': ['haldi', 'haldhi', 'haridra'],
+    'haldi': ['turmeric', 'haldhi', 'haridra'],
+    'haldhi': ['turmeric', 'haldi', 'haridra'],
+
+    'coriander': ['dhania', 'dhaniya', 'daniya'],
+    'dhania': ['coriander', 'dhaniya', 'daniya'],
+    'dhaniya': ['coriander', 'dhania', 'daniya'],
+    'daniya': ['coriander', 'dhania', 'dhaniya'],
+
+    'atta': ['ata', 'flour', 'wheat'],
+    'ata': ['atta', 'flour', 'wheat'],
+    'flour': ['atta', 'ata', 'maida', 'sooji', 'suji'],
+    'maida': ['flour', 'refined flour'],
+
+    'dal': ['daal', 'dhal', 'dall', 'lentil', 'lentils', 'pulse', 'pulses'],
+    'daal': ['dal', 'dhal', 'lentil', 'lentils', 'pulse'],
+    'dhal': ['dal', 'daal', 'lentil', 'lentils', 'pulse'],
+    'lentil': ['dal', 'daal', 'dhal', 'pulse'],
+    'lentils': ['dal', 'daal', 'dhal', 'pulses'],
+
+    'chana': ['channa', 'chole', 'choley', 'chickpea', 'chickpeas', 'gram'],
+    'channa': ['chana', 'chole', 'choley', 'chickpea', 'chickpeas'],
+    'chole': ['chana', 'channa', 'choley', 'chickpea', 'chickpeas'],
+    'choley': ['chana', 'channa', 'chole', 'chickpea', 'chickpeas'],
+    'chickpea': ['chana', 'channa', 'chole', 'choley', 'gram'],
+    'chickpeas': ['chana', 'channa', 'chole', 'choley', 'gram'],
+
+    'rice': ['basmati', 'chawal'],
+    'basmati': ['rice', 'chawal'],
+    'chawal': ['rice', 'basmati'],
+
+    'ghee': ['ghi', 'clarified butter'],
+    'ghi': ['ghee', 'clarified butter'],
+
+    'cardamom': ['elaichi', 'elachi', 'ilaychi'],
+    'elaichi': ['cardamom', 'elachi', 'ilaychi'],
+    'elachi': ['cardamom', 'elaichi', 'ilaychi'],
+    'ilaychi': ['cardamom', 'elaichi', 'elachi'],
+
+    'clove': ['laung', 'long'],
+    'laung': ['clove', 'long'],
+    'long': ['clove', 'laung'],
+
+    'cinnamon': ['dalchini'],
+    'dalchini': ['cinnamon'],
+
+    'mustard': ['rai', 'sarson'],
+    'rai': ['mustard', 'sarson'],
+    'sarson': ['mustard', 'rai'],
+
+    'fenugreek': ['methi'],
+    'methi': ['fenugreek'],
+
+    'fennel': ['saunf', 'sonf'],
+    'saunf': ['fennel', 'sonf'],
+    'sonf': ['fennel', 'saunf'],
+
+    'spinach': ['palak'],
+    'palak': ['spinach'],
+
+    'paneer': ['panir', 'cottage cheese'],
+    'panir': ['paneer', 'cottage cheese'],
+
+    'pickle': ['achar', 'achaar'],
+    'achar': ['pickle', 'achaar'],
+    'achaar': ['pickle', 'achar'],
+
+    'jaggery': ['gur', 'gud'],
+    'gur': ['jaggery', 'gud'],
+    'gud': ['jaggery', 'gur'],
+
+    'tea': ['chai', 'patti'],
+    'chai': ['tea', 'patti'],
+
+    'salt': ['namak'],
+    'namak': ['salt'],
+
+    'sugar': ['cheeni', 'chini'],
+    'cheeni': ['sugar', 'chini'],
+
+    'onion': ['piaz', 'pyaz'],
+    'pyaz': ['onion', 'piaz'],
+
+    'garlic': ['lehsun', 'lahsun'],
+    'lahsun': ['garlic', 'lehsun'],
+
+    'ginger': ['adrak'],
+    'adrak': ['ginger']
+  }), []);
+
+  // Levenshtein Edit Distance algorithm for typo tolerance
+  const levenshteinDistance = useCallback((a, b) => {
+    if (a === b) return 0;
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    return matrix[b.length][a.length];
+  }, []);
+
+  const checkFuzzyWordMatch = useCallback((searchWord, targetWord) => {
+    if (!searchWord || !targetWord) return { matched: false, score: 0 };
+    if (targetWord === searchWord) return { matched: true, score: 100 };
+    if (targetWord.includes(searchWord)) return { matched: true, score: 85 };
+    if (searchWord.includes(targetWord)) return { matched: true, score: 80 };
+
+    // Check synonym matches
+    const syns = GROCERY_SYNONYMS[searchWord] || [];
+    if (syns.some(s => targetWord.includes(s) || s.includes(targetWord))) {
+      return { matched: true, score: 75 };
+    }
+
+    // Levenshtein edit distance check (typo tolerance)
+    if (searchWord.length >= 3 && targetWord.length >= 3) {
+      const maxDist = searchWord.length > 5 ? 2 : 1;
+      const dist = levenshteinDistance(searchWord, targetWord);
+      if (dist <= maxDist) {
+        return { matched: true, score: 60 - dist * 10 };
+      }
+    }
+
+    return { matched: false, score: 0 };
+  }, [GROCERY_SYNONYMS, levenshteinDistance]);
+
+  // Typo-tolerant, synonym-aware fuzzy search
   const searchProducts = useCallback((query) => {
     if (!query || query.trim().length === 0) return [];
     const q = query.toLowerCase().trim();
-    const terms = q.split(/\s+/);
-    return products.filter(p => {
-      const name = p.name.toLowerCase();
-      return terms.every(term => name.includes(term));
-    });
-  }, [products]);
+    const searchTerms = q.split(/\s+/);
+
+    const scored = [];
+
+    for (const p of products) {
+      const name = (p.name || '').toLowerCase();
+      const category = (p.category || '').toLowerCase();
+      const description = (p.description || '').toLowerCase();
+      const fullText = `${name} ${category} ${description}`;
+      const targetWords = fullText.split(/[^a-z0-9]+/);
+
+      let matchedTermsCount = 0;
+      let totalScore = 0;
+
+      // Direct phrase match bonus
+      if (name.includes(q)) {
+        totalScore += 500;
+      }
+
+      for (const term of searchTerms) {
+        if (name.includes(term)) {
+          matchedTermsCount++;
+          totalScore += 120;
+          continue;
+        }
+
+        let termMatched = false;
+        let maxTermScore = 0;
+
+        for (const word of targetWords) {
+          if (!word || word.length < 2) continue;
+          const res = checkFuzzyWordMatch(term, word);
+          if (res.matched) {
+            termMatched = true;
+            if (res.score > maxTermScore) maxTermScore = res.score;
+          }
+        }
+
+        if (termMatched) {
+          matchedTermsCount++;
+          totalScore += maxTermScore;
+        }
+      }
+
+      // Require all search terms to match either substring, synonym, or fuzzy Levenshtein
+      if (matchedTermsCount === searchTerms.length) {
+        scored.push({ product: p, score: totalScore });
+      }
+    }
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored.map(s => s.product);
+  }, [products, checkFuzzyWordMatch]);
 
   // Get products by category name
   const getProductsByCategory = useCallback((categoryName) => {

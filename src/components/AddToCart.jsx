@@ -4,29 +4,36 @@ import { ShoppingBag, Check, Plus, Minus } from 'lucide-react';
 import './AddToCart.css';
 
 export default function AddToCart({ product, compact = false }) {
-  const { addToCart } = useCart();
+  const { cartItems, addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+
+  // Check current quantity of this specific product already in cart
+  const existingItem = cartItems.find(item => String(item.id) === String(product.id));
 
   const handleAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product, quantity);
+    
+    // Pass the exact quantity shown in the selector at the time of clicking
+    const selectedQty = Math.max(1, Number(quantity) || 1);
+    addToCart(product, selectedQty);
+    
     setAdded(true);
-    setQuantity(1); // Reset after adding
+    setQuantity(1); // Reset selector to 1 after successful add
     setTimeout(() => setAdded(false), 2000);
   };
 
   const decrement = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setQuantity(Math.max(1, quantity - 1));
+    setQuantity(prev => Math.max(1, prev - 1));
   };
 
   const increment = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setQuantity(quantity + 1);
+    setQuantity(prev => prev + 1);
   };
 
   return (
