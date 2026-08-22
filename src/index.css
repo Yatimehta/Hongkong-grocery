@@ -256,16 +256,16 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
 }
 
-/* --- Buttons --- */
+/* --- Buttons (all pill-shaped) --- */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: 0.65rem 1.4rem;
+  padding: 0.65rem 1.6rem;
   font-weight: 600;
   font-size: var(--font-size-sm);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   transition: all var(--transition-base);
   white-space: nowrap;
   user-select: none;
@@ -286,6 +286,19 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-primary:active {
   transform: translateY(0);
+}
+
+.btn-secondary {
+  background: #C2410C;
+  color: var(--color-white);
+  box-shadow: 0 4px 12px rgba(194, 65, 12, 0.28);
+}
+
+.btn-secondary:hover {
+  background: #9A3412;
+  box-shadow: 0 6px 16px rgba(194, 65, 12, 0.38);
+  transform: translateY(-2px);
+  color: var(--color-white);
 }
 
 .btn-accent {
@@ -326,15 +339,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-lg {
-  padding: 0.85rem 1.8rem;
+  padding: 0.85rem 2rem;
   font-size: var(--font-size-md);
-  border-radius: var(--radius-lg);
 }
 
 .btn-sm {
-  padding: 0.45rem 0.9rem;
+  padding: 0.45rem 1.1rem;
   font-size: var(--font-size-xs);
-  border-radius: var(--radius-sm);
 }
 
 /* --- Animations --- */

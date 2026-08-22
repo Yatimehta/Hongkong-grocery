@@ -69,7 +69,7 @@ function StorefrontApp() {
           <Route path="/faq" element={
             <StaticPage title="Frequently Asked Questions">
               <h3>Do you have a physical store?</h3>
-              <p>Yes, visit us at G/F, 65-67 South Wall Road, Kowloon City.</p>
+              <p>Yes, visit us at Ngau Chi Wan Market, Clear Water Bay Rd, MTR exit B, Stall S201, 1/F, Choi Hung, Hong Kong.</p>
               
               <h3>Are all items online available in store?</h3>
               <p>Most items are in stock, but inventory fluctuates. We recommend contacting us to reserve items before a long trip.</p>

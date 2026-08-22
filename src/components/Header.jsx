@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import { useCart } from '../context/CartContext';
 import { ShoppingBag, Search as SearchIcon, Menu, X } from 'lucide-react';
+import logoImg from '../assets/logo.png';
 import './Header.css';
 
 export default function Header() {
@@ -31,11 +32,7 @@ export default function Header() {
         {/* Logo */}
         <Link to="/" className="header-logo" id="header-logo" onClick={() => setMobileMenuOpen(false)}>
           <div className="header-logo-icon">
-            <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
-              <rect width="44" height="44" rx="12" fill="#5CB349"/>
-              <ellipse cx="22" cy="23" rx="15" ry="13" fill="none" stroke="#fff" strokeWidth="1.5" opacity="0.9"/>
-              <text x="22" y="28" textAnchor="middle" fontFamily="'Inter','Segoe UI',sans-serif" fontWeight="800" fontSize="15" fill="#fff">WS</text>
-            </svg>
+            <img src={logoImg} alt="Waqas Provision Store Logo" className="header-logo-img" />
           </div>
           <div className="header-logo-text">
             <span className="header-brand-name">Waqas Provision Store</span>

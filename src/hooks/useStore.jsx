@@ -150,16 +150,6 @@ export function StoreProvider({ children }) {
 
   useEffect(() => {
     loadData(true);
-
-    // Real-time bidirectional synchronization: refetch on window focus or via periodic interval
-    const handleFocus = () => loadData(false);
-    window.addEventListener('focus', handleFocus);
-    const interval = setInterval(() => loadData(false), 15000);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      clearInterval(interval);
-    };
   }, [loadData]);
 
   // Build category→products index

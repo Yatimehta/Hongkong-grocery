@@ -3,11 +3,14 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
+const compression = require('compression');
+
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
 
 const app = express();
 
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

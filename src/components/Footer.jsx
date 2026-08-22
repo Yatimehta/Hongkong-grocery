@@ -11,7 +11,7 @@ export default function Footer() {
   const { settings } = useStore();
 
   const storeName = settings?.store_name || 'Waqas Provision Store';
-  const storeAddress = settings?.store_address || 'G/F, 65-67 South Wall Road, Kowloon City';
+  const storeAddress = settings?.store_address || 'Ngau Chi Wan Market, Clear Water Bay Rd, MTR exit B, Stall S201, 1/F, Choi Hung, Hong Kong';
   const supportPhone = settings?.support_phone || '+852 9029 1454';
   const rawWhatsApp = settings?.whatsapp_number || '85290291454';
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');

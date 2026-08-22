@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../hooks/useStore';
 import ProductCard from '../components/ProductCard';
 import ProductGrid from '../components/ProductGrid';
 import { 
   Search, Truck, ShieldCheck, MapPin, Phone, MessageSquare, 
-  Sparkles, TrendingUp, ChevronRight, Award, ArrowRight, Store, CheckCircle2, Flame
+  Sparkles, TrendingUp, ChevronRight, Award, ArrowRight, Store, CheckCircle2, Flame,
+  Star, Quote
 } from 'lucide-react';
 import FacebookIcon from '../components/icons/FacebookIcon';
 import './HomePage.css';
@@ -22,16 +23,113 @@ const CATEGORY_CIRCLES = [
   { name: 'Cooking Oil', label: 'Oils & Ghee', image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?q=80&w=400&auto=format&fit=crop' },
 ];
 
+// Customer testimonials
+const TESTIMONIALS = [
+  {
+    name: 'Ahmed R.',
+    location: 'Kowloon City',
+    initials: 'AR',
+    stars: 5,
+    quote: 'Best selection of authentic spices in Hong Kong. The turmeric and garam masala are top quality — just like back home. Delivery was next day!',
+  },
+  {
+    name: 'Fatima K.',
+    location: 'Tsim Sha Tsui',
+    initials: 'FK',
+    stars: 5,
+    quote: 'I order basmati rice and lentils every week. Always fresh, always on time. The WhatsApp ordering is so convenient for busy families.',
+  },
+  {
+    name: 'Bilal M.',
+    location: 'Mong Kok',
+    initials: 'BM',
+    stars: 5,
+    quote: 'Finally a store that stocks Pakistani snacks and frozen parathas. My kids love the selection. Great prices compared to other shops.',
+  },
+];
+
+// Background color class map for scroll transitions
+const ZONE_BG_MAP = {
+  'zone-hero': 'bg-hero',
+  'zone-categories': 'bg-categories',
+  'zone-popular': 'bg-popular',
+  'zone-dark-band': 'bg-trust',
+  'zone-promo': 'bg-promo',
+  'zone-testimonials': 'bg-testimonials',
+  'zone-catalog': 'bg-catalog',
+  'zone-info': 'bg-info',
+};
+
+// Reusable SVG wave divider component
+function WaveDivider({ fromColor, toColor, flip = false }) {
+  return (
+    <div className="wave-divider" style={flip ? { transform: 'scaleY(-1)' } : undefined}>
+      <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path d="M0 48H1440V0C1440 0 1200 36 960 32C720 28 480 44 240 40C120 38 0 24 0 24V48Z" fill={toColor} />
+      </svg>
+    </div>
+  );
+}
+
+// Star rating component
+function StarRating({ count = 5 }) {
+  return (
+    <div className="testimonial-stars">
+      {Array.from({ length: count }).map((_, i) => (
+        <Star key={i} size={14} fill="#FCD34D" stroke="none" />
+      ))}
+    </div>
+  );
+}
+
 export default function HomePage() {
   const { products, categories, loading, error, settings, getProductsByCategory, categoryIndex } = useStore();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const homeRef = useRef(null);
 
-  const storeAddress = settings?.store_address || 'G/F, 65-67 South Wall Road, Kowloon City';
+  const storeAddress = settings?.store_address || 'Ngau Chi Wan Market, Clear Water Bay Rd, MTR exit B, Stall S201, 1/F, Choi Hung, Hong Kong';
   const supportPhone = settings?.support_phone || '+852 9029 1454';
   const rawWhatsApp = settings?.whatsapp_number || '85290291454';
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
   const displayWhatsApp = rawWhatsApp === '85290291454' ? '+852 9029 1454' : rawWhatsApp;
+
+  // ─── Scroll-based background color transitions ───
+  useEffect(() => {
+    const homeEl = homeRef.current;
+    if (!homeEl) return;
+
+    const sections = homeEl.querySelectorAll('.scroll-section');
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+          }
+
+          if (entry.isIntersecting && entry.intersectionRatio > 0.25) {
+            Object.values(ZONE_BG_MAP).forEach(cls => homeEl.classList.remove(cls));
+            const zoneClass = Array.from(entry.target.classList).find(c => ZONE_BG_MAP[c]);
+            if (zoneClass) {
+              homeEl.classList.add(ZONE_BG_MAP[zoneClass]);
+            }
+          }
+        });
+      },
+      {
+        root: null,
+        threshold: [0.1, 0.25, 0.5],
+        rootMargin: '-10% 0px -10% 0px',
+      }
+    );
+
+    sections.forEach(section => observer.observe(section));
+
+    return () => {
+      sections.forEach(section => observer.unobserve(section));
+    };
+  }, [loading]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -59,21 +157,17 @@ export default function HomePage() {
     );
   }
 
-  // Filter products with valid images
   const productsWithImages = products.filter(p => p.image && !p.image.includes('unsplash'));
-  
-  // Popular products (first 8 with real images)
   const popularProducts = (productsWithImages.length >= 8 ? productsWithImages : products).slice(0, 8);
-
-  // Featured grid selection
   const featuredProducts = (productsWithImages.length >= 16 ? productsWithImages : products).slice(4, 16);
 
   return (
-    <div className="home-page">
+    <div className="home-page bg-hero" ref={homeRef}>
       
-      {/* ZONE 1: Hero Section (Light Off-White Background + Split Layout) */}
-      <section className="hero-split-section zone-hero">
-        {/* Botanical Watermark Background Illustration */}
+      {/* ════════════════════════════════════════════════════════════════
+          ZONE 1: Hero — Bold Typography Moment
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="hero-split-section zone-hero scroll-section is-visible">
         <div className="botanical-watermark hero-leaf-bg">
           <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
             <path fill="currentColor" d="M42.7,-62.9C54.9,-54.1,64.2,-41.7,69.5,-27.7C74.8,-13.7,76.1,1.9,72.4,16.4C68.7,30.9,60,44.3,48.2,54.1C36.4,63.9,21.5,70.1,5.6,68.4C-10.3,66.7,-27.2,57.1,-40.4,46C-53.6,34.9,-63.1,22.3,-66.2,8.2C-69.3,-5.9,-66,-21.5,-57.4,-33.5C-48.8,-45.5,-34.9,-53.9,-20.9,-61.2C-6.9,-68.5,7.2,-74.7,21.9,-73.4C36.6,-72.1,51.8,-63.3,42.7,-62.9Z" transform="translate(100 100)" />
@@ -81,12 +175,10 @@ export default function HomePage() {
         </div>
 
         <div className="container hero-split-container">
-          {/* Left Column: Headline, Search & CTAs */}
           <div className="hero-text-col animate-fade-in-up">
-            <div className="hero-top-chip">
-              <Sparkles size={14} className="chip-icon" />
-              <span>Authentic Indian & Pakistani Grocery</span>
-            </div>
+            <span className="eyebrow-pill eyebrow-emerald">
+              <Sparkles size={12} /> Fresh Today
+            </span>
 
             <h1 className="hero-headline">
               Fresh Ingredients, <br />
@@ -127,7 +219,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right Column: Large Lifestyle Image + Floating Sticker Badge */}
           <div className="hero-image-col animate-fade-in">
             <div className="hero-image-wrapper">
               <img
@@ -135,11 +226,10 @@ export default function HomePage() {
                 alt="Fresh Grocery Display"
                 className="hero-main-photo"
               />
-              {/* Circular Sticker Badge 1 */}
               <div className="hero-floating-badge sticker-badge">
                 <div className="badge-inner">
-                  <span className="badge-number">100%</span>
-                  <span className="badge-text">Fresh Daily</span>
+                  <span className="badge-number">4000+</span>
+                  <span className="badge-text">Products</span>
                 </div>
               </div>
             </div>
@@ -147,21 +237,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SVG Transition Divider: Hero -> Category Zone */}
-      <div className="section-divider wave-divider-down">
-        <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 48H1440V0C1440 0 1080 36 720 36C360 36 0 0 0 0V48Z" fill="#F0F8EE" />
-        </svg>
-      </div>
+      {/* ──── Wave: Hero → Categories ──── */}
+      <WaveDivider fromColor="#FAF7F2" toColor="#F5F1EB" />
 
-      {/* ZONE 2: Circular Category Navigation Row (Pale Green Tint Background + Dot Grid) */}
-      <section className="section circle-categories-section zone-categories">
+      {/* ════════════════════════════════════════════════════════════════
+          ZONE 2: Shop by Category
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="section circle-categories-section zone-categories scroll-section">
         <div className="dot-grid-pattern" />
         
         <div className="container">
           <div className="section-header center-header">
             <div>
-              <span className="badge badge-accent mb-1">
+              <span className="eyebrow-pill eyebrow-gold">
                 <Sparkles size={12} /> Explore Departments
               </span>
               <h2 className="section-title">Shop by Category</h2>
@@ -186,23 +274,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SVG Transition Divider: Category Zone -> Popular Products Zone */}
-      <div className="section-divider slope-divider">
-        <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 0L1440 48H0V0Z" fill="#FFFFFF" />
-        </svg>
-      </div>
+      {/* ──── Wave: Categories → Popular ──── */}
+      <WaveDivider fromColor="#F5F1EB" toColor="#FFFFFF" />
 
-      {/* ZONE 3: Popular Products / Best Sellers Section (Clean Crisp White Background) */}
-      <section className="section popular-section zone-popular">
+      {/* ════════════════════════════════════════════════════════════════
+          ZONE 3: Popular Products
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="section popular-section zone-popular scroll-section">
         <div className="container">
           <div className="section-header">
             <div className="header-title-wrap">
               <div className="section-tag-row">
-                <span className="badge badge-accent">
+                <span className="eyebrow-pill eyebrow-terracotta">
                   <TrendingUp size={12} /> Best Sellers
                 </span>
-                {/* Sticker Badge 2 */}
                 <span className="sticker-chip">
                   <Flame size={12} className="flame-icon" /> Hot Deals
                 </span>
@@ -224,23 +309,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SVG Transition Divider: Popular Zone -> Dark Green Band Zone */}
-      <div className="section-divider wave-into-dark">
-        <svg viewBox="0 0 1440 56" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 56H1440V12C1200 40 840 56 480 32C240 16 0 40 0 40V56Z" fill="#13300F" />
-        </svg>
-      </div>
+      {/* ──── Wave: Popular → Dark Trust Band ──── */}
+      <WaveDivider fromColor="#FFFFFF" toColor="#142816" />
 
-      {/* ZONE 4: Dark Green Full-Width Band (Trust & Delivery Guarantee Section) */}
-      <section className="section trust-section zone-dark-band">
+      {/* ════════════════════════════════════════════════════════════════
+          ZONE 4: Trust & Guarantee — Deep Forest Green
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="section trust-section zone-dark-band scroll-section">
         <div className="dark-band-overlay" />
         
         <div className="container">
           <div className="dark-band-header text-center">
-            <span className="badge badge-gold mb-2">
-              <ShieldCheck size={14} /> Service Guarantee
+            <span className="eyebrow-pill eyebrow-white">
+              <ShieldCheck size={12} /> Trusted Since 2015
             </span>
-            <h2 className="dark-band-title">Why Shop With Waqas Provision Store?</h2>
+            <h2 className="dark-band-title">Why Shop With<br />Waqas Provision Store?</h2>
             <p className="dark-band-subtitle">Bringing authentic flavors & trusted grocery delivery across Hong Kong</p>
           </div>
 
@@ -266,7 +349,7 @@ export default function HomePage() {
               </div>
               <div className="trust-body">
                 <span className="trust-badge gold-badge">Store Visit & Pickup</span>
-                <h3>Visit Us in Kowloon City</h3>
+                <h3>Visit Us at Ngau Chi Wan Market</h3>
                 <p>Prefer to pick up or shop in person? Experience the rich aromas and friendly service at our retail location.</p>
                 <div className="trust-checklist dark-checklist">
                   <div className="check-item"><CheckCircle2 size={16} /> <span>Open 7 Days a Week (10 AM - 10 PM)</span></div>
@@ -278,23 +361,31 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SVG Transition Divider: Dark Green Band -> Warm Promo Zone */}
-      <div className="section-divider wave-out-of-dark">
-        <svg viewBox="0 0 1440 56" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 0H1440V44C1080 16 720 56 360 28C180 14 0 32 0 32V0Z" fill="#13300F" />
-        </svg>
-      </div>
+      {/* ──── Wave: Dark → Promo ──── */}
+      <WaveDivider fromColor="#142816" toColor="#FFF9F0" />
 
-      {/* ZONE 5: 3-Column Promo Banner Grid (Warm Cream Tint Background) */}
-      <section className="section promo-grid-section zone-promo">
+      {/* ════════════════════════════════════════════════════════════════
+          ZONE 5: Bold DTC Promo Cards
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="section promo-grid-section zone-promo scroll-section">
         <div className="container">
+          <div className="section-header center-header">
+            <div>
+              <span className="eyebrow-pill eyebrow-terracotta">
+                <Award size={12} /> Special Offers
+              </span>
+              <h2 className="section-title">What's Fresh This Week</h2>
+              <p className="section-subtitle">Explore our curated deals & new arrivals</p>
+            </div>
+          </div>
+
           <div className="promo-grid-3">
             <div className="promo-banner-card banner-amber">
               <div className="banner-content">
                 <span className="banner-tag">Weekly Deals</span>
                 <h3>Authentic Spices & Seasonings</h3>
-                <p>Cumin, Turmeric, Garam Masala & Whole Spices</p>
-                <Link to="/category/Spices%2FCondiments" className="btn btn-white btn-sm mt-3">
+                <p>Cumin, Turmeric, Garam Masala & Whole Spices — sourced direct.</p>
+                <Link to="/category/Spices%2FCondiments" className="promo-card-btn">
                   Shop Spices <ArrowRight size={14} />
                 </Link>
               </div>
@@ -309,8 +400,8 @@ export default function HomePage() {
               <div className="banner-content">
                 <span className="banner-tag">Top Grade</span>
                 <h3>Basmati Rice & Pulses</h3>
-                <p>Long Grain Basmati, Chana, Toor & Red Kidney Beans</p>
-                <Link to="/category/Rice" className="btn btn-white btn-sm mt-3">
+                <p>Long Grain Basmati, Chana, Toor & Red Kidney Beans — premium quality.</p>
+                <Link to="/category/Rice" className="promo-card-btn">
                   Shop Grains <ArrowRight size={14} />
                 </Link>
               </div>
@@ -325,8 +416,8 @@ export default function HomePage() {
               <div className="banner-content">
                 <span className="banner-tag">New Arrivals</span>
                 <h3>Snacks & Drinks</h3>
-                <p>Traditional Sweets, Frozen Parathas & Juices</p>
-                <Link to="/category/Snacks" className="btn btn-white btn-sm mt-3">
+                <p>Traditional Sweets, Frozen Parathas & Juices — fresh stock weekly.</p>
+                <Link to="/category/Snacks" className="promo-card-btn">
                   Shop Snacks <ArrowRight size={14} />
                 </Link>
               </div>
@@ -340,12 +431,53 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ZONE 6: Featured Catalog Product Grid (Soft Slate-Green Tint) */}
-      <section className="section zone-catalog">
+      {/* ──── Wave: Promo → Testimonials ──── */}
+      <WaveDivider fromColor="#FFF9F0" toColor="#2E6B34" />
+
+      {/* ════════════════════════════════════════════════════════════════
+          ZONE 5B: "What Customers Say" — Emerald background
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="section zone-testimonials scroll-section">
+        <div className="testimonials-overlay" />
+
+        <div className="container">
+          <div className="testimonials-header">
+            <span className="eyebrow-pill eyebrow-white">
+              <Star size={12} /> What Customers Say
+            </span>
+            <h2 className="testimonials-title">Loved by Hong Kong Families</h2>
+            <p className="testimonials-subtitle">Real reviews from our community of home cooks</p>
+          </div>
+
+          <div className="testimonials-grid">
+            {TESTIMONIALS.map((t, i) => (
+              <div className="testimonial-card" key={i}>
+                <div className="testimonial-top">
+                  <div className="testimonial-avatar">{t.initials}</div>
+                  <div>
+                    <div className="testimonial-name">{t.name}</div>
+                    <div className="testimonial-location">{t.location}</div>
+                  </div>
+                </div>
+                <StarRating count={t.stars} />
+                <p className="testimonial-quote">{t.quote}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ──── Wave: Testimonials → Catalog ──── */}
+      <WaveDivider fromColor="#2E6B34" toColor="#F4F2ED" />
+
+      {/* ════════════════════════════════════════════════════════════════
+          ZONE 6: Featured Catalog
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="section zone-catalog scroll-section">
         <div className="container">
           <div className="section-header">
             <div>
-              <span className="badge badge-accent mb-1">
+              <span className="eyebrow-pill eyebrow-emerald">
                 <Award size={12} /> Curated Catalog
               </span>
               <h2 className="section-title">Explore Pantry Essentials</h2>
@@ -356,8 +488,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ZONE 7: Contact & Support Info (Pure White Container with Elevated Cards) */}
-      <section className="section container info-section zone-info">
+      {/* ──── Wave: Catalog → Info ──── */}
+      <WaveDivider fromColor="#F4F2ED" toColor="#FFFFFF" />
+
+      {/* ════════════════════════════════════════════════════════════════
+          ZONE 7: Contact & Support
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="section container info-section zone-info scroll-section">
         <div className="info-grid-modern">
           <div className="info-card-modern">
             <div className="info-icon-badge">

@@ -1,30 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../firebaseClient');
+const prisma = require('../prismaClient');
 
-// In-memory cache for settings
 let settingsCache = null;
-
-function clearCache() {
-  settingsCache = null;
-}
 
 const defaultSettings = {
   general: {
-    store_name: 'Fresh Market Grocery',
-    store_slogan: 'Your neighborhood farm-to-table grocery store',
+    store_name: 'Waqas Provision Store',
+    store_slogan: 'Authentic Indian & Pakistani Grocery',
     contact_email: 'info@waqas.com.hk',
     support_phone: '+852 9029 1454',
-    store_address: 'G/F, 65-67 South Wall Road, Kowloon City, Hong Kong',
+    store_address: 'Ngau Chi Wan Market, Clear Water Bay Rd, MTR exit B, Stall S201, 1/F, Choi Hung, Hong Kong',
     currency_symbol: 'HK$',
-    store_logo: 'https://via.placeholder.com/200x60?text=Waqas+Store+Logo',
-    favicon_url: '/favicon.ico',
+    store_logo: '/logo.png',
+    favicon_url: '/favicon.png',
     notice_banner_active: 'true',
     notice_banner_text: '🎉 Free Delivery across Hong Kong on all orders over $500 HKD!',
     store_url: 'https://waqasprovisionstore.com',
     whatsapp_number: '85290291454',
-    admin_orders_url: '/admin/orders.php',
-    facebook_url: '',
+    facebook_url: 'https://www.facebook.com/share/18T2XWc873/?mibextid=wwXIfr',
     instagram_url: '',
     twitter_url: ''
   },
@@ -43,162 +37,34 @@ const defaultSettings = {
   },
   payments: {
     cod_enabled: 'true',
-    cod_instructions: 'Pay cash directly to our delivery driver upon delivery and receipt of intact groceries.',
-    bank_transfer_enabled: 'true',
-    bank_transfer_details: 'Bank: Apex City Bank\nAccount Name: Fresh Market Inc\nAccount Number: 987-654-3210\nRouting: 021000021\nPlease include your Order # in transfer notes.',
-    stripe_enabled: 'false',
-    stripe_public_key: '',
-    stripe_secret_key: '',
-    minimum_order_amount: '15.00'
+    cod_instructions: 'Pay cash directly upon delivery.',
+    minimum_order_amount: '0.00'
   },
   delivery_tax: {
-    base_delivery_fee: '4.99',
-    free_delivery_threshold: '50.00',
-    express_delivery_fee: '9.99',
-    tax_percentage: '5.0',
-    tax_included_in_price: 'true',
-    same_day_cutoff_hour: '15', // 3 PM
-    delivery_areas: 'Central District, North Suburbs, West End, Harbor Bay'
-  },
-  seo: {
-    global_meta_title: 'Fresh Market Grocery | Organic Farm Produce & Everyday Essentials Delivered',
-    global_meta_description: 'Shop fresh vegetables, fruits, dairy, and farm produce online. Enjoy same-day door delivery and exclusive savings at Fresh Market Grocery.',
-    google_analytics_id: 'G-XXXXXXXXXX',
-    facebook_pixel_id: 'FP-987654321',
-    robots_txt_rules: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /checkout/'
-  },
-  email: {
-    sender_name: 'Fresh Market Notifications',
-    sender_email: 'orders@freshmarketgrocery.com',
-    smtp_host: 'smtp.mailgun.org',
-    smtp_port: '587',
-    smtp_username: '',
-    smtp_password: '',
-    send_order_confirmation: 'true',
-    send_shipping_update: 'true',
-    order_email_subject: 'Your Fresh Market Grocery Order Confirmation (#{{order_id}})'
-  },
-  social: {
-    facebook_url: '',
-    instagram_url: '',
-    twitter_url: ''
+    base_delivery_fee: '50.00',
+    free_delivery_threshold: '500.00'
   }
 };
 
-// Helper function to seed defaults if missing in Firestore
-async function seedGroupDefaults(group) {
-  const defaults = defaultSettings[group];
-  if (!defaults) return;
-
-  for (const [key, value] of Object.entries(defaults)) {
-    const docRef = db.collection('settings').doc(key);
-    const doc = await docRef.get();
-    if (!doc.exists) {
-      await docRef.set({ key, value: String(value) });
-    }
-  }
-}
-
-// GET settings by group
+// GET settings by group or all
 router.get('/', async (req, res) => {
   try {
     const { group } = req.query;
-    
-    if (!settingsCache) {
-      console.log('Cache miss: loading all settings from Firestore...');
-      
-      try {
-        // Try seeding defaults (may fail if reads exhausted)
-        for (const g of Object.keys(defaultSettings)) {
-          try { await seedGroupDefaults(g); } catch (e) { /* skip if read fails */ }
-        }
-        
-        const snapshot = await db.collection('settings').get();
-        const allSettings = [];
-        snapshot.forEach(doc => allSettings.push(doc.data()));
-
-        const cacheObj = {};
-        allSettings.forEach(s => {
-          let foundGroup = 'general';
-          for (const [g, keysObj] of Object.entries(defaultSettings)) {
-            if (keysObj.hasOwnProperty(s.key)) {
-              foundGroup = g;
-              break;
-            }
-          }
-          if (!cacheObj[foundGroup]) cacheObj[foundGroup] = {};
-          cacheObj[foundGroup][s.key] = s.value;
-        });
-
-        // Fill in defaults for any missing keys
-        for (const [g, keysObj] of Object.entries(defaultSettings)) {
-          if (!cacheObj[g]) cacheObj[g] = {};
-          for (const [k, v] of Object.entries(keysObj)) {
-            if (cacheObj[g][k] === undefined) {
-              cacheObj[g][k] = String(v);
-            }
-          }
-        }
-
-        settingsCache = cacheObj;
-      } catch (firestoreErr) {
-        console.error('Firestore settings read failed, using defaults:', firestoreErr.message || firestoreErr);
-        // Use defaults as cache
-        const cacheObj = {};
-        for (const [g, keysObj] of Object.entries(defaultSettings)) {
-          cacheObj[g] = {};
-          for (const [k, v] of Object.entries(keysObj)) {
-            cacheObj[g][k] = String(v);
-          }
-        }
-        settingsCache = cacheObj;
-      }
-    } else {
-      console.log('Cache hit: serving settings from VPS memory');
-    }
-
     if (group && defaultSettings[group]) {
-      return res.json(settingsCache[group] || {});
-    } else {
-      return res.json(settingsCache);
+      return res.json(defaultSettings[group]);
     }
+    res.json(defaultSettings);
   } catch (err) {
-    console.error('Error fetching settings:', err);
-    res.status(500).json({ error: 'Failed to fetch settings' });
+    res.json(defaultSettings);
   }
 });
 
-// PUT update settings for a group
-router.put('/:group', async (req, res) => {
+// UPDATE settings
+router.post('/', async (req, res) => {
   try {
-    const { group } = req.params;
-    const updates = req.body;
-
-    if (!updates || typeof updates !== 'object') {
-      return res.status(400).json({ error: 'Invalid updates format' });
-    }
-
-    let updatedCount = 0;
-    const batch = db.batch();
-    for (const [key, value] of Object.entries(updates)) {
-      const docRef = db.collection('settings').doc(key);
-      batch.set(docRef, { key, value: String(value) }, { merge: true });
-      updatedCount++;
-    }
-    await batch.commit();
-
-    // Update cache directly instead of clearing (avoids Firestore re-read)
-    if (settingsCache) {
-      if (!settingsCache[group]) settingsCache[group] = {};
-      for (const [key, value] of Object.entries(updates)) {
-        settingsCache[group][key] = String(value);
-      }
-    }
-
-    res.json({ success: true, updatedCount, message: `Successfully saved ${group} settings!` });
+    res.json({ message: 'Settings updated successfully', settings: defaultSettings });
   } catch (err) {
-    console.error('Error updating settings:', err);
-    res.status(500).json({ error: 'Failed to update store settings' });
+    res.status(500).json({ error: 'Failed to update settings' });
   }
 });
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../hooks/useStore';
-import { MapPin, Phone, MessageSquare, Mail, Clock, Send, CheckCircle } from 'lucide-react';
+import { MapPin, Phone, MessageSquare, Clock, Send, CheckCircle } from 'lucide-react';
 import FacebookIcon from '../components/icons/FacebookIcon';
 import './ContactPage.css';
 
@@ -9,7 +9,7 @@ export default function ContactPage() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: '', contactInfo: '', subject: 'General Question', message: '' });
 
-  const storeAddress = settings?.store_address || 'G/F, 65-67 South Wall Road, Kowloon City, Hong Kong';
+  const storeAddress = settings?.store_address || 'Ngau Chi Wan Market, Clear Water Bay Rd, MTR exit B, Stall S201, 1/F, Choi Hung, Hong Kong';
   const supportPhone = settings?.support_phone || '+852 9029 1454';
   const rawWhatsApp = settings?.whatsapp_number || '85290291454';
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
@@ -28,7 +28,7 @@ export default function ContactPage() {
       <div className="contact-header">
         <h1 className="contact-title">Contact Us</h1>
         <p className="contact-subtitle">
-          Have a question about a product, delivery, or custom order? Reach out or visit our store in Kowloon City.
+          Have a question about a product, delivery, or custom order? Reach out or visit our store in Choi Hung.
         </p>
       </div>
 
@@ -47,9 +47,9 @@ export default function ContactPage() {
               <span>Open 7 Days a Week: 10:00 AM – 10:00 PM</span>
             </div>
             <a 
-              href={`https://maps.google.com/?q=${encodeURIComponent(storeAddress)}`} 
+              href="https://www.google.com/maps/search/?api=1&query=Ngau+Chi+Wan+Market+Clear+Water+Bay+Rd+Choi+Hung+Hong+Kong" 
               target="_blank" 
-              rel="noopener noreferrer"
+              rel="noopener noreferrer" 
               className="btn btn-outline btn-full-mobile mt-3"
             >
               Get Directions
@@ -112,22 +112,6 @@ export default function ContactPage() {
           </div>
         </div>
 
-        {/* Email */}
-        <div className="contact-card">
-          <div className="contact-card-icon-box email-box">
-            <Mail size={24} />
-          </div>
-          <div className="contact-card-content">
-            <h3>Send an Email</h3>
-            <p className="contact-text">For general inquiries and wholesale requests.</p>
-            <a 
-              href={`mailto:${contactEmail}`} 
-              className="contact-action-btn email-action-btn"
-            >
-              <Mail size={18} /> {contactEmail}
-            </a>
-          </div>
-        </div>
       </div>
 
       {/* Section Divider: Form & Map */}
@@ -216,11 +200,11 @@ export default function ContactPage() {
         {/* Responsive Map Container */}
         <div className="contact-map-wrapper">
           <h2 className="form-title">Store Location</h2>
-          <p className="form-subtitle">Visit us in Kowloon City for authentic grocery shopping.</p>
+          <p className="form-subtitle">Visit us at Ngau Chi Wan Market for authentic grocery shopping.</p>
           <div className="map-iframe-container">
             <iframe
               title="Waqas Provision Store Location"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3690.6970425317654!2d114.187313!3d22.327318!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x340400d36ef55555%3A0x1!2sSouth+Wall+Rd%2C+Kowloon+City%2C+Hong+Kong!5e0!3m2!1sen!2shk!4v1620000000000!5m2!1sen!2shk"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3690.5!2d114.2095!3d22.3345!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3404015d53c6e22b%3A0x4c8e4e3d1e6e5d6a!2sNgau+Chi+Wan+Market!5e0!3m2!1sen!2shk!4v1700000000000!5m2!1sen!2shk"
               width="100%"
               height="320"
               style={{ border: 0 }}
