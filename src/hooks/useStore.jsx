@@ -77,6 +77,23 @@ export function StoreProvider({ children }) {
     return allCategories;
   };
 
+  const fetchWithTimeout = async (resource, options = {}) => {
+    const { timeout = 6000 } = options;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+      const response = await fetch(resource, {
+        ...options,
+        signal: controller.signal
+      });
+      clearTimeout(id);
+      return response;
+    } catch (err) {
+      clearTimeout(id);
+      throw err;
+    }
+  };
+
   const loadData = useCallback(async (isInitial = false) => {
     try {
       if (isInitial) setLoading(true);
@@ -85,9 +102,9 @@ export function StoreProvider({ children }) {
 
       try {
         const [apiProdRes, apiCatRes, apiSettingsRes] = await Promise.all([
-          fetch('/api/products?limit=150'), // Fast initial 150 items batch for instant load!
-          fetch('/api/categories'),
-          fetch('/api/settings?group=general'),
+          fetchWithTimeout('/api/products?limit=150', { timeout: 5000 }), // Fast initial 150 items batch
+          fetchWithTimeout('/api/categories', { timeout: 4000 }),
+          fetchWithTimeout('/api/settings?group=general', { timeout: 3000 }),
         ]);
 
         if (apiProdRes.ok && apiCatRes.ok) {
@@ -107,7 +124,7 @@ export function StoreProvider({ children }) {
         console.log('API fetch attempt fallback to static JSON:', apiErr);
       }
 
-      // Fallback to static JSON if DB/API failed
+      // Fallback to static JSON if DB/API failed or timed out
       if (!productsData.length) {
         const [productsRes, categoriesRes] = await Promise.all([
           fetch('/data/products.json'),
@@ -127,7 +144,7 @@ export function StoreProvider({ children }) {
         if (isInitial) setLoading(false);
 
         // Background non-blocking hydration of full 4,200 product list
-        fetch('/api/products?limit=all')
+        fetchWithTimeout('/api/products?limit=all', { timeout: 15000 })
           .then(res => res.json())
           .then(fullResult => {
             const fullList = fullResult.products || fullResult.data || fullResult;
