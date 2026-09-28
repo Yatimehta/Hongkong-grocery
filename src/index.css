@@ -92,7 +92,9 @@
 
   /* Layout */
   --container-max: 1280px;
-  --header-height: 76px;
+  --announcement-height: 32px;
+  --header-nav-height: 76px;
+  --header-height: calc(var(--header-nav-height) + var(--announcement-height));
 }
 
 /* --- Reset & Base Styles --- */
@@ -131,7 +133,9 @@ html, body {
 
 @media (max-width: 768px) {
   :root {
-    --header-height: 64px;
+    --announcement-height: 28px;
+    --header-nav-height: 64px;
+    --header-height: calc(var(--header-nav-height) + var(--announcement-height));
   }
 
   .main-content {
@@ -215,6 +219,20 @@ h1, h2, h3, h4, h5, h6 {
   align-items: flex-end;
   margin-bottom: var(--space-8);
   gap: var(--space-4);
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .section-header.center-header {
+    align-items: center;
+    text-align: center;
+  }
 }
 
 .section-title {

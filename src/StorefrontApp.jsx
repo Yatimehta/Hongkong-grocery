@@ -55,14 +55,14 @@ function StorefrontApp() {
           {/* Static Pages */}
           <Route path="/delivery" element={
             <StaticPage title="Delivery Information">
-              <p>We deliver across Hong Kong.</p>
+              <p>We deliver authentic groceries fast across Hong Kong.</p>
               <ul>
-                <li><strong>Kowloon & Hong Kong Island:</strong> Next day delivery for orders placed before 4 PM.</li>
+                <li><strong>Kowloon & Hong Kong Island:</strong> Next-day delivery for orders placed before 4 PM.</li>
                 <li><strong>New Territories:</strong> 2-3 business days.</li>
-                <li><strong>Free Delivery:</strong> On orders above $500 HKD.</li>
-                <li><strong>Standard Fee:</strong> $50 HKD for orders below $500 HKD.</li>
+                <li><strong>Free Delivery:</strong> Free delivery on all orders above $1,000.</li>
+                <li><strong>Standard Delivery Charge:</strong> $60 delivery fee on orders below $1,000.</li>
               </ul>
-              <p>Please contact us via WhatsApp if you need urgent delivery.</p>
+              <p>Please contact us via WhatsApp if you need urgent delivery or bulk orders.</p>
             </StaticPage>
           } />
           

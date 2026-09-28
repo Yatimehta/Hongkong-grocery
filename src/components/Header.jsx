@@ -28,6 +28,20 @@ export default function Header() {
 
   return (
     <header className="header" id="site-header">
+      {/* Top Announcement Bar for Free Delivery */}
+      <div className="header-announcement-bar">
+        <div className="container announcement-bar-container">
+          <span className="announcement-badge">🚚 Delivery</span>
+          <span className="announcement-text desktop-announcement">
+            <strong>FREE Delivery</strong> on orders above <strong>$1,000</strong> &bull; Standard $60 fee on orders below $1,000
+          </span>
+          <span className="announcement-text mobile-announcement">
+            <strong>FREE Delivery</strong> over $1,000 &bull; $60 fee below $1,000
+          </span>
+          <Link to="/delivery" className="announcement-link">Delivery Info &rarr;</Link>
+        </div>
+      </div>
+
       <div className="header-inner container">
         {/* Logo */}
         <Link to="/" className="header-logo" id="header-logo" onClick={() => setMobileMenuOpen(false)}>

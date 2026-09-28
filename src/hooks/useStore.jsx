@@ -104,7 +104,7 @@ export function StoreProvider({ children }) {
         const [apiProdRes, apiCatRes, apiSettingsRes] = await Promise.all([
           fetchWithTimeout('/api/products?limit=150', { timeout: 5000 }), // Fast initial 150 items batch
           fetchWithTimeout('/api/categories', { timeout: 4000 }),
-          fetchWithTimeout('/api/settings?group=general', { timeout: 3000 }),
+          fetchWithTimeout('/api/settings', { timeout: 3000 }),
         ]);
 
         if (apiProdRes.ok && apiCatRes.ok) {
@@ -118,7 +118,16 @@ export function StoreProvider({ children }) {
         }
         if (apiSettingsRes.ok) {
           const settingsData = await apiSettingsRes.json();
-          setSettings(settingsData || {});
+          const merged = {
+            free_delivery_threshold: 1000,
+            base_delivery_fee: 60,
+            ...(settingsData.general || {}),
+            ...(settingsData.delivery_tax || {}),
+            ...(settingsData.payments || {}),
+            ...(settingsData.site_manager || {}),
+            ...(settingsData.store_name ? settingsData : {})
+          };
+          setSettings(merged);
         }
       } catch (apiErr) {
         console.log('API fetch attempt fallback to static JSON:', apiErr);

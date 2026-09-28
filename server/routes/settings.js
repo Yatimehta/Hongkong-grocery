@@ -15,7 +15,7 @@ const defaultSettings = {
     store_logo: '/logo.png',
     favicon_url: '/favicon.png',
     notice_banner_active: 'true',
-    notice_banner_text: '🎉 Free Delivery across Hong Kong on all orders over $500 HKD!',
+    notice_banner_text: '🚚 Free Delivery on orders above $1,000! ($60 delivery fee for orders below $1,000)',
     store_url: 'https://waqasprovisionstore.com',
     whatsapp_number: '85290291454',
     facebook_url: 'https://www.facebook.com/share/18T2XWc873/?mibextid=wwXIfr',
@@ -41,8 +41,8 @@ const defaultSettings = {
     minimum_order_amount: '0.00'
   },
   delivery_tax: {
-    base_delivery_fee: '50.00',
-    free_delivery_threshold: '500.00'
+    base_delivery_fee: '60.00',
+    free_delivery_threshold: '1000.00'
   }
 };
 
@@ -59,9 +59,58 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET settings by param group
+router.get('/:group', async (req, res) => {
+  try {
+    const { group } = req.params;
+    if (group && defaultSettings[group]) {
+      return res.json(defaultSettings[group]);
+    }
+    res.status(404).json({ error: 'Settings group not found' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// UPDATE settings by param group
+router.post('/:group', async (req, res) => {
+  try {
+    const { group } = req.params;
+    if (defaultSettings[group]) {
+      defaultSettings[group] = { ...defaultSettings[group], ...req.body };
+    } else {
+      defaultSettings[group] = req.body;
+    }
+    res.json({ message: 'Settings updated successfully', settings: defaultSettings[group] });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
+router.put('/:group', async (req, res) => {
+  try {
+    const { group } = req.params;
+    if (defaultSettings[group]) {
+      defaultSettings[group] = { ...defaultSettings[group], ...req.body };
+    } else {
+      defaultSettings[group] = req.body;
+    }
+    res.json({ message: 'Settings updated successfully', settings: defaultSettings[group] });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
 // UPDATE settings
 router.post('/', async (req, res) => {
   try {
+    if (req.body && typeof req.body === 'object') {
+      Object.keys(req.body).forEach(k => {
+        if (defaultSettings[k]) {
+          defaultSettings[k] = { ...defaultSettings[k], ...req.body[k] };
+        }
+      });
+    }
     res.json({ message: 'Settings updated successfully', settings: defaultSettings });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update settings' });

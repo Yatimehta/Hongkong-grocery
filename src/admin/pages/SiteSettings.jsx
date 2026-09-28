@@ -209,25 +209,25 @@ export default function SiteSettings() {
               </h3>
 
               <div className="form-group">
-                <label>Free Shipping Above (£)</label>
+                <label>Free Shipping Above ($)</label>
                 <input
                   type="text"
                   className="admin-input"
                   value={deliveryTax.free_delivery_threshold || ''}
                   onChange={e => setDeliveryTax({ ...deliveryTax, free_delivery_threshold: e.target.value })}
-                  placeholder="50"
+                  placeholder="1000"
                   style={{ width: '100%' }}
                 />
               </div>
 
               <div className="form-group">
-                <label>Shipping Charge (£)</label>
+                <label>Shipping Charge ($)</label>
                 <input
                   type="text"
                   className="admin-input"
                   value={deliveryTax.base_delivery_fee || ''}
                   onChange={e => setDeliveryTax({ ...deliveryTax, base_delivery_fee: e.target.value })}
-                  placeholder="4.99"
+                  placeholder="60"
                   style={{ width: '100%' }}
                 />
               </div>

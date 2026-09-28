@@ -80,7 +80,7 @@ export default function DeliveryTax() {
                   type="number" 
                   step="0.01" 
                   className="admin-input" 
-                  value={settings.base_delivery_fee || '4.99'} 
+                  value={settings.base_delivery_fee || '60.00'} 
                   onChange={e => handleChange('base_delivery_fee', e.target.value)} 
                   style={{ fontWeight: 700, color: '#34d399', fontSize: '1.05rem' }}
                 />
@@ -94,7 +94,7 @@ export default function DeliveryTax() {
                   type="number" 
                   step="0.01" 
                   className="admin-input" 
-                  value={settings.free_delivery_threshold || '50.00'} 
+                  value={settings.free_delivery_threshold || '1000.00'} 
                   onChange={e => handleChange('free_delivery_threshold', e.target.value)} 
                   style={{ fontWeight: 700, color: '#f59e0b', fontSize: '1.05rem' }}
                 />
@@ -117,7 +117,7 @@ export default function DeliveryTax() {
                 <AlertCircle size={16} /> Storefront Cart Banner Experience
               </div>
               <div style={{ color: '#94a3b8', fontSize: '0.8rem', lineHeight: '1.4' }}>
-                Shoppers with carts under <strong>HK${settings.free_delivery_threshold || '50.00'}</strong> will see a dynamic progress bar motivating them to add more items to unlock free delivery (saving <strong>HK${settings.base_delivery_fee || '4.99'}</strong>)!
+                Shoppers with carts under <strong>HK${settings.free_delivery_threshold || '1000.00'}</strong> will see a dynamic progress bar motivating them to add more items to unlock free delivery (saving <strong>HK${settings.base_delivery_fee || '60.00'}</strong>)!
               </div>
             </div>
           </div>

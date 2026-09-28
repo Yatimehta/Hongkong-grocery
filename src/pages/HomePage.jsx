@@ -190,10 +190,10 @@ export default function HomePage() {
             </p>
 
             <form className="hero-search-box" onSubmit={handleSearch}>
-              <Search size={20} className="search-icon-svg" />
+              <Search size={18} className="search-icon-svg" />
               <input
                 type="text"
-                placeholder="Search for basmati, dal, spices, snacks..."
+                placeholder="Search groceries, rice, spices..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="hero-search-input"
@@ -335,7 +335,7 @@ export default function HomePage() {
               <div className="trust-body">
                 <span className="trust-badge dark-badge">Hong Kong Shipping</span>
                 <h3>Fast & Reliable Delivery</h3>
-                <p>Next-day delivery across Kowloon and Hong Kong Island on orders placed before 4 PM. Free delivery on orders over $500 HKD.</p>
+                <p>Next-day delivery across Kowloon and Hong Kong Island on orders placed before 4 PM. Free delivery on orders above $1,000 ($60 delivery charge for orders below $1,000).</p>
                 <div className="trust-checklist dark-checklist">
                   <div className="check-item"><CheckCircle2 size={16} /> <span>Temperature Controlled Handling</span></div>
                   <div className="check-item"><CheckCircle2 size={16} /> <span>Real-Time WhatsApp Dispatch Alerts</span></div>
